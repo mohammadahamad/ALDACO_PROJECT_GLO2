@@ -36,7 +36,7 @@ cli
   .argument("<ids>", "Liste d'IDs séparés par des virgules")
   .option("--showDetails", "Afficher les détails des questions")
   .action(({ args, options, logger }) => {
-    // Appel de la fonction createExam qui se trouve dams exam.js
+    // Appel de la fonction createExam qui se trouve dans exam.js
     const idsArray = args.ids.split(",").map((x) => x.trim());
     createExam(args.examName, idsArray, options.showDetails, logger);
   })

@@ -41,7 +41,11 @@ npm install
 
 ## Versions
 
-A développer quand on aura une idée des différentes versions à avoir
+Version 1.0.0 : 
+Création des commandes createExam, searchQuestion, createVcard, testExam, statExam.
+
+Version 1.0.1 : 
+Implémentation createExam
 
 
 ## Liste des contributeurs 
