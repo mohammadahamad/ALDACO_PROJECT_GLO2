@@ -29,7 +29,32 @@ cli
 
 
 
-  // F3 : création de la commande createExam 
+  // Les fonctions F2, F4, F5, F9 et F10 n’ont pas été développées indépendamment car elles sont prises en charge par les autres fonctionnalités existantes.
+
+
+
+
+  // F1 : création de la commande searchQuestion 
+
+  .command("searchQuestion", "Chercher une question dans la banque de questions")
+  .argument("[kw]", "Mot-clé de recherche")
+  .argument("[id]", "ID spécifique de la question")
+  .argument("[type]", "Type spécifique de la question")
+  .option("--all", "Afficher les détails de la question")
+  .action(({ args, options, logger }) => {
+    // Appel de la fonction searchQuestion qui se trouve dans search.js
+    searchQuestion(args.kw, args.id, args.type, options.all, logger);
+  })
+  /*.command("search <keyword>", "Search for a keyword in data files")
+  .option("-id <id>", "Specify an ID to narrow down the search")
+  .option("-type <type>", "Specify a type to narrow down the search")
+  .option(
+    "-kw <kw>",
+    "Specify an additional keyword to narrow down the search"
+  );*/
+
+
+  // F3 : création de la commande createExam (spécifications sous-jacentes : F2, F4, F5)
 
   .command("createExam", "Créer un examen à partir d'IDs")
   .argument("<examName>", "Nom de l'examen")
@@ -40,27 +65,6 @@ cli
     const idsArray = args.ids.split(",").map((x) => x.trim());
     createExam(args.examName, idsArray, options.showDetails, logger);
   })
-
-
-
-  // F1 : création de la commande searchQuestion 
-
-  .command("searchQuestions", "Chercher une question dans la banque de questions")
-  .argument("[kw]", "Mot-clé de recherche")
-  .argument("[id]", "ID spécifique de la question")
-  .argument("[type]", "Type spécifique de la question")
-  .option("--all", "Afficher les détails de la question")
-  .action(({ args, options, logger }) => {
-    // Appel de la fonction searchQuestion qui se trouve dans search.js
-    searchQuestions(args.kw, args.id, args.type, options.all, logger);
-  })
-  /*.command("search <keyword>", "Search for a keyword in data files")
-  .option("-id <id>", "Specify an ID to narrow down the search")
-  .option("-type <type>", "Specify a type to narrow down the search")
-  .option(
-    "-kw <kw>",
-    "Specify an additional keyword to narrow down the search"
-  );*/
 
   // F6 : création de la commande createVcard 
 
@@ -79,9 +83,10 @@ cli
 
   .command("testExam", "Simuler un examen et obtenir une note")
   .argument("<FileName>", "Nom du fichier de l'examen à tester")
+  .argument("<FileUserAnswers>", "Nom du fichier contenant les réponses de l'utilisateur")
   .action(({ args, logger }) => {
     // Appel de la fonction testExam qui se trouve dans exam.js
-    testExam(args.FileName, logger);
+    testExam(args.FileName, args.FileUserAnswers, logger);
   })
 
 

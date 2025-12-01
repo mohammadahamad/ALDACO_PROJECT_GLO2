@@ -1,6 +1,6 @@
-// F3, F2, F5, F4, 
 
 
+// F3 (et F2, F4, F5) : création de la commande createExam
 export function createExam(examName, idsArray, showDetails, logger) {
     // Implémentation de la fonction createExam
     if (idsArray.length >= 15 && idsArray.length <= 20) {
@@ -22,7 +22,7 @@ export function createExam(examName, idsArray, showDetails, logger) {
         for (let k = 0; k < idsArray.length ; k++) {
 
 
-            //CHERCHER DANS LA BASE DE DONNEES
+            //CHERCHER LES ID DANS LA BASE DE DONNEES
 
 
             // Si l'option est activée :
@@ -52,6 +52,8 @@ export function createExam(examName, idsArray, showDetails, logger) {
 
 }
 
+
+// F7 : création de la commande testExam
 export function testExam(examName, logger) {
     // Implémentation de la fonction testExam
     // est ce que du coup il manque pas le fichier de réponses de l'utilisateur ?
@@ -59,6 +61,20 @@ export function testExam(examName, logger) {
 
 }
 
+  // F8 : création de la commande statExam
+
 export function statExam(examName, logger) {
-    // Implémentation de la fonction statExam
+    // Ouvrir le fichier en argument
+    let content;
+    try {
+        content = fs.readFileSync(examName, 'utf8');
+    } catch (err) {
+        logger.error(`Impossible de lire le fichier: ${err.message}`);
+        return;
+    }
+    // Boucle pour récupérer chaque type de questions dans un array
+   
+    // Compter le nombre de questions par type
+    // Créer l'histogramme
+    // Afficher et enregistrer l'histogramme
 }
