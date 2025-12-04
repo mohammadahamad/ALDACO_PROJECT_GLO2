@@ -1,6 +1,6 @@
-const { createExam, testExam, statExam } = require("./src/exam.js");
-import { searchInBank } from "./src/search.js";
-const { createVcard } = require("./src/vcard.js");
+import { createExam, testExam, statExam } from "./src/exam.js";
+import { searchInBank, displayQuestions } from "./src/search.js";
+import { createVcard } from "./src/vcard.js";
 
 /*
 const colors = require("colors");
@@ -38,11 +38,12 @@ cli
   .argument("[type]", "Type spécifique de la question")
   .option("--all", "Afficher les détails de la question")
   .action(({ args, options }) => {
-    searchInBank(args.kw, args.id, args.type, options.all);
+    searchInBank(args.kw, [args.id], args.type).then((results) => {
+      displayQuestions(results, options.all);
+    });
   })
 
   // F3 : création de la commande createExam (spécifications sous-jacentes : F2, F4, F5)
-
   .command("createExam", "Créer un examen à partir d'IDs")
   .argument("<examName>", "Nom de l'examen")
   .argument("<ids>", "Liste d'IDs séparés par des virgules")
