@@ -2,12 +2,11 @@ import fs from "fs";
 
 /**
  * Fonction pour récupérer les questions dans la banque de questions avec des critères de recherche.
- * Répond à l'exigence F1.
  *
  * @param {string} kw Mot-clé pour la recherche
  * @param {string} id id de la question
  * @param {string} type type de la question
- * @returns
+ * @param {boolean} showAll Indicateur pour afficher tout le contenu de la question
  */
 export function searchInBank(kw, id, type, showAll) {
   if (!kw && !id && !type) {
@@ -17,14 +16,17 @@ export function searchInBank(kw, id, type, showAll) {
     return;
   }
 
-  let index = 0;
+  // Parcourt tous les fichiers dans le répertoire spécifié
   for (const fileName of getAllFilesFromDir("./res/SujetB_data")) {
     fs.readFile(`./res/SujetB_data/${fileName}`, "utf8", function (err, data) {
       if (err) {
         console.error(err);
       }
-      const questions = data.split("::").slice(1);
+
+      // Divise le contenu du fichier en questions individuelles et soustrait le premier élément vide
+      const questions = data.toLowerCase().split("::").slice(1);
       for (let i = 0; i < questions.length; i += 2) {
+        // Vérifie si les mot-clés sont présents dans l'ID ou le contenu de la question
         if (kw) {
           for (let keyword of kw.split(",")) {
             if (
@@ -32,28 +34,23 @@ export function searchInBank(kw, id, type, showAll) {
               questions[i + 1].includes(keyword)
             ) {
               console.log("From exam file: " + fileName);
-              console.log("[ID] : " + questions[i]);
+              console.log("\t[ID] : " + questions[i]);
               if (showAll) {
-                console.log("\n[content] :\n" + questions[i + 1]);
+                console.log("\n\t[content] :\n" + questions[i + 1]);
               }
-              index++;
               break;
             }
           }
         }
-        if (id) {
-          if (questions[i].includes(id)) {
-            console.log("[ID] : " + questions[i]);
+
+        // Check si l'ID de la question contient l'ID ou le type spécifié
+        if (id || type) {
+          if (questions[i].includes(id) || questions[i].includes(type)) {
+            console.log("From exam file: " + fileName);
+            console.log("\t[ID] : " + questions[i]);
             if (showAll) {
-              console.log("\n[content] :\n" + questions[i + 1]);
+              console.log("\n\t[content] :\n" + questions[i + 1]);
             }
-            index++;
-          }
-        }
-        if (type) {
-          if (questions[i].includes(type)) {
-            questionsFound[index] = questions[i] + "\n" + questions[i + 1];
-            index++;
           }
         }
       }

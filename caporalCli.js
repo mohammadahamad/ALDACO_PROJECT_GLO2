@@ -1,5 +1,5 @@
 const { createExam, testExam, statExam } = require("./src/exam.js");
-const { searchQuestions } = require("./src/search.js");
+import { searchInBank } from "./src/search.js";
 const { createVcard } = require("./src/vcard.js");
 
 /*
@@ -37,17 +37,9 @@ cli
   .argument("[id]", "ID spécifique de la question")
   .argument("[type]", "Type spécifique de la question")
   .option("--all", "Afficher les détails de la question")
-  .action(({ args, options, logger }) => {
-    // Appel de la fonction searchQuestion qui se trouve dans search.js
-    searchQuestion(args.kw, args.id, args.type, options.all, logger);
+  .action(({ args, options }) => {
+    searchInBank(args.kw, args.id, args.type, options.all);
   })
-  /*.command("search <keyword>", "Search for a keyword in data files")
-  .option("-id <id>", "Specify an ID to narrow down the search")
-  .option("-type <type>", "Specify a type to narrow down the search")
-  .option(
-    "-kw <kw>",
-    "Specify an additional keyword to narrow down the search"
-  );*/
 
   // F3 : création de la commande createExam (spécifications sous-jacentes : F2, F4, F5)
 
