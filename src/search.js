@@ -1,27 +1,72 @@
-// F1 : création de la commande searchQuestion
-export function searchQuestion(kw, id, type, showAll, logger) {
-    if (kw) {
-        // Recherche dans la base de données et message d'erreur si pas trouvé
-        let ListQuestions = []; // stocker dedans les questions qui matchent
-        // Boucle pour afficher une à une les questions qui matchent (ListQuestions) 
-        if (ListQuestions.length === 0) {
-            logger.info("Aucune question trouvée.")
+import fs from "fs";
+
+/**
+ * Fonction pour récupérer les questions dans la banque de questions avec des critères de recherche.
+ * Répond à l'exigence F1.
+ *
+ * @param {string} kw Mot-clé pour la recherche
+ * @param {string} id id de la question
+ * @param {string} type type de la question
+ * @returns
+ */
+export function searchInBank(kw, id, type, showAll) {
+  if (!kw && !id && !type) {
+    logger.error(
+      "Veuillez fournir au moins un critère de recherche (mot-clé, ID, type de question)."
+    );
+    return;
+  }
+
+  let index = 0;
+  for (const fileName of getAllFilesFromDir("./res/SujetB_data")) {
+    fs.readFile(`./res/SujetB_data/${fileName}`, "utf8", function (err, data) {
+      if (err) {
+        console.error(err);
+      }
+      const questions = data.split("::").slice(1);
+      for (let i = 0; i < questions.length; i += 2) {
+        if (kw) {
+          for (let keyword of kw.split(",")) {
+            if (
+              questions[i].includes(keyword) ||
+              questions[i + 1].includes(keyword)
+            ) {
+              console.log("From exam file: " + fileName);
+              console.log("[ID] : " + questions[i]);
+              if (showAll) {
+                console.log("\n[content] :\n" + questions[i + 1]);
+              }
+              index++;
+              break;
+            }
+          }
         }
-        for (i=0 ; i < ListQuestions.length(); i++) {
-            //Affichage
+        if (id) {
+          if (questions[i].includes(id)) {
+            console.log("[ID] : " + questions[i]);
+            if (showAll) {
+              console.log("\n[content] :\n" + questions[i + 1]);
+            }
+            index++;
+          }
         }
+        if (type) {
+          if (questions[i].includes(type)) {
+            questionsFound[index] = questions[i] + "\n" + questions[i + 1];
+            index++;
+          }
+        }
+      }
+    });
+  }
+}
 
-    }
-    if (id) {
-
-    }
-    if (type) {
-
-    }
-    if (!kw && !id && !type) {
-        logger.error("Veuillez fournir au moins un critère de recherche (mot-clé, ID, type de question).");
-        return;
-    }
-    
-
+/**
+ * Récupère tous les fichiers d'un répertoire donné
+ *
+ * @param {string} dirPath Chemin du répertoire
+ * @returns Liste des fichiers dans le répertoire
+ */
+export function getAllFilesFromDir(dirPath) {
+  return fs.readdirSync(dirPath);
 }

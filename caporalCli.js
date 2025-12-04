@@ -1,10 +1,8 @@
-
 const { createExam, testExam, statExam } = require("./src/exam.js");
 const { searchQuestions } = require("./src/search.js");
 const { createVcard } = require("./src/vcard.js");
 
-
-/*const fs = require("fs");
+/*
 const colors = require("colors");
 
 const vg = require("vega");
@@ -15,7 +13,7 @@ const cli = require("@caporal/core").default;
 cli
   .version("projetB")
   .version("1.0.0")
-  
+
   .command("readme", "Display the README.md file")
   .action(({ args, options, logger }) => {
     fs.readFile("./README.md", "utf8", function (err, data) {
@@ -27,16 +25,14 @@ cli
     });
   })
 
-
-
   // Les fonctions F2, F4, F5, F9 et F10 n’ont pas été développées indépendamment car elles sont prises en charge par les autres fonctionnalités existantes.
 
+  // F1 : création de la commande searchQuestion
 
-
-
-  // F1 : création de la commande searchQuestion 
-
-  .command("searchQuestion", "Chercher une question dans la banque de questions")
+  .command(
+    "searchQuestion",
+    "Chercher une question dans la banque de questions"
+  )
   .argument("[kw]", "Mot-clé de recherche")
   .argument("[id]", "ID spécifique de la question")
   .argument("[type]", "Type spécifique de la question")
@@ -53,7 +49,6 @@ cli
     "Specify an additional keyword to narrow down the search"
   );*/
 
-
   // F3 : création de la commande createExam (spécifications sous-jacentes : F2, F4, F5)
 
   .command("createExam", "Créer un examen à partir d'IDs")
@@ -66,7 +61,7 @@ cli
     createExam(args.examName, idsArray, options.showDetails, logger);
   })
 
-  // F6 : création de la commande createVcard 
+  // F6 : création de la commande createVcard
 
   .command("createVcard", "Créer une vCard à partir d'un utilisateur")
   .argument("<completeName>", "Nom complet de l'utilisateur")
@@ -75,20 +70,27 @@ cli
   .argument("[phone]", "Numéro de téléphone de l'utilisateur")
   .action(async ({ args, logger }) => {
     // Appel de la fonction searchQuestion qui se trouve dans search.js
-    await createVcard(args.completeName, args.email, args.school, args.phone, logger);
+    await createVcard(
+      args.completeName,
+      args.email,
+      args.school,
+      args.phone,
+      logger
+    );
   })
-
 
   // F7 : création de la commande testExam
 
   .command("testExam", "Simuler un examen et obtenir une note")
   .argument("<FileName>", "Nom du fichier de l'examen à tester")
-  .argument("<FileUserAnswers>", "Nom du fichier contenant les réponses de l'utilisateur")
+  .argument(
+    "<FileUserAnswers>",
+    "Nom du fichier contenant les réponses de l'utilisateur"
+  )
   .action(({ args, logger }) => {
     // Appel de la fonction testExam qui se trouve dans exam.js
     testExam(args.FileName, args.FileUserAnswers, logger);
   })
-
 
   // F8 : création de la commande statExam
 
@@ -98,7 +100,6 @@ cli
     // Appel de la fonction statExam qui se trouve dans exam.js
     statExam(args.FileName, logger);
   });
-
 
 // Lancement du programme
 cli.run(process.argv.slice(2));
