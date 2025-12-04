@@ -58,6 +58,9 @@ export function searchInBank(kw, id, type, showAll) {
   }
 }
 
+// Pour utiliser dans exam.js :
+module.exports = { searchInBank } ;
+
 /**
  * Récupère tous les fichiers d'un répertoire donné
  *
