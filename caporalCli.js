@@ -25,11 +25,10 @@ cli
     });
   })
 
-
   // F1 : création de la commande searchinBank :
 
   .command(
-    "searchinBank",
+    "searchQuestion",
     "Chercher une question dans la banque de questions"
   )
   .argument("[kw]", "Mot-clé de recherche")
@@ -42,7 +41,6 @@ cli
     });
   })
 
-
   // F3 : création de la commande createExam :
 
   .command("createExam", "Créer un examen à partir d'IDs")
@@ -54,7 +52,6 @@ cli
     const idsArray = args.ids.split(",").map((x) => x.trim());
     createExam(args.examName, idsArray, options.showDetails, logger);
   })
-
 
   // F6 : création de la commande createVcard :
 
@@ -74,7 +71,6 @@ cli
     );
   })
 
-
   // F7 : création de la commande testExam :
 
   .command("testExam", "Simuler un examen et obtenir une note")
@@ -88,7 +84,6 @@ cli
     testExam(args.FileName, args.FileUserAnswers, logger);
   })
 
-
   // F8 : création de la commande statExam :
 
   .command("statExam", "Générer des statistiques à partir d'un examen")
@@ -98,18 +93,20 @@ cli
     statExam(args.FileName, logger);
   })
 
-
   // F9 : création de la commande compareExam :
 
-  .command("compareExam", "Comparer la répartition de types de questions entre 2 examens")
+  .command(
+    "compareExam",
+    "Comparer la répartition de types de questions entre 2 examens"
+  )
   .argument("<Files>", "Liste des fichiers à comparer (au moins 2)")
   .action(({ args, logger }) => {
-  const files = args.Files; // Stocker fichiers dans un tableau
-  if (files.length < 2) {
-    logger.warn("Vous devez indiquer au moins deux fichiers à comparer.");
-    return;
-  }
-  compareExam(files, logger);
+    const files = args.Files; // Stocker fichiers dans un tableau
+    if (files.length < 2) {
+      logger.warn("Vous devez indiquer au moins deux fichiers à comparer.");
+      return;
+    }
+    compareExam(files, logger);
   });
 
 // Lancement du programme

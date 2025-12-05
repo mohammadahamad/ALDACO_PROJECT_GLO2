@@ -50,7 +50,6 @@ export async function searchInBank(kw, id, type) {
         if (id.length > 0) {
           for (let specificId of id) {
             if (questions[i].includes(specificId.toLowerCase())) {
-              console.log("Found ID match: " + specificId);
               questionsFound.push({
                 id: questions[i],
                 content: questions[i + 1],
@@ -65,6 +64,9 @@ export async function searchInBank(kw, id, type) {
         }
       }
     }
+  }
+  if (questionsFound.length === 0) {
+    console.log("Aucune question trouvée");
   }
   return questionsFound;
 }
