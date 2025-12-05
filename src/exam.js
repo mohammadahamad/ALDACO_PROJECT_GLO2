@@ -10,6 +10,7 @@ import { searchInBank } from "./search.js";
  * @param {boolean} showAll Indicateur pour afficher tout le contenu de la question
  */
 
+// F3 : création de la commande createExam : 
 export function createExam(examName, idsArray, showDetails, logger) {
   // Vérification du nombre d'IDs uniques (entre 15 et 20)
   let uniqueIds = [...new Set(idsArray)];
@@ -54,7 +55,8 @@ export function createExam(examName, idsArray, showDetails, logger) {
   });
 }
 
-// F7 : création de la commande testExam
+
+// F7 : création de la commande testExam :
 export function testExam(examName, UserAnswersFile, logger) {
   const examPath = path.join("./res/SujetB_data", `examen_${examName}.gift`);
 
@@ -86,8 +88,8 @@ export function testExam(examName, UserAnswersFile, logger) {
 // Liste bonnes réponses / mauvaises
 // Liste réponses
 
-// F8 : création de la commande statExam
 
+// F8 : création de la commande statExam :
 export function statExam(examName, logger) {
   // Ouvrir le fichier en argument
   const examPath = path.join("./res/SujetB_data", `examen_${examName}.gift`);
@@ -97,10 +99,35 @@ export function statExam(examName, logger) {
     logger.error(`Le fichier d'examen n'existe pas : ${examName}`);
     return;
   }
+}
 
   // Boucle pour récupérer chaque type de questions dans un array
 
   // Compter le nombre de questions par type
   // Créer l'histogramme
   // Afficher et enregistrer l'histogramme
+
+
+
+
+ // compareExam : Faire une analyse comparative entre 2 fichiers (un examen ou un profil pré-calculé)  en comparant les types de question par pourcentage et différence relative (F9).
+
+ // F9: création de la commande compareExam :
+export function compareExam(files, logger) {
+
+  // Fichiers = soit fichier gift ou alors profil pré-calculé
+  // Si c'est extension .gift, on calcule, sinon on next jusqu'au calcul des écarts
+
+  // Ouvrir les fichiers en argument
+  for (const file of files) {
+    if (file.endsWith(".gift")){
+      const filePath = path.join("./res/SujetB_data", `examen_${file}.gift`);
+    }
+    
+  }
+  
+
 }
+
+
+

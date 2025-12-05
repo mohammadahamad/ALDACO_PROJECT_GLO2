@@ -26,7 +26,7 @@ cli
   })
 
 
-  // F1 : création de la commande searchinBank
+  // F1 : création de la commande searchinBank :
 
   .command(
     "searchinBank",
@@ -42,7 +42,9 @@ cli
     });
   })
 
-  // F3 : création de la commande createExam (spécifications sous-jacentes : F2, F4, F5)
+
+  // F3 : création de la commande createExam :
+
   .command("createExam", "Créer un examen à partir d'IDs")
   .argument("<examName>", "Nom de l'examen")
   .argument("<ids>", "Liste d'IDs séparés par des virgules")
@@ -53,7 +55,8 @@ cli
     createExam(args.examName, idsArray, options.showDetails, logger);
   })
 
-  // F6 : création de la commande createVcard
+
+  // F6 : création de la commande createVcard :
 
   .command("createVcard", "Créer une vCard à partir d'un utilisateur")
   .argument("<completeName>", "Nom complet de l'utilisateur")
@@ -71,7 +74,8 @@ cli
     );
   })
 
-  // F7 : création de la commande testExam
+
+  // F7 : création de la commande testExam :
 
   .command("testExam", "Simuler un examen et obtenir une note")
   .argument("<FileName>", "Nom du fichier de l'examen à tester")
@@ -84,13 +88,28 @@ cli
     testExam(args.FileName, args.FileUserAnswers, logger);
   })
 
-  // F8 : création de la commande statExam
+
+  // F8 : création de la commande statExam :
 
   .command("statExam", "Générer des statistiques à partir d'un examen")
   .argument("<FileName>", "Nom du fichier de l'examen à analyser")
   .action(({ args, logger }) => {
     // Appel de la fonction statExam qui se trouve dans exam.js
     statExam(args.FileName, logger);
+  })
+
+
+  // F9 : création de la commande compareExam :
+
+  .command("compareExam", "Comparer la répartition de types de questions entre 2 examens")
+  .argument("<Files>", "Liste des fichiers à comparer (au moins 2)")
+  .action(({ args, logger }) => {
+  const files = args.Files; // Stocker fichiers dans un tableau
+  if (files.length < 2) {
+    logger.warn("Vous devez indiquer au moins deux fichiers à comparer.");
+    return;
+  }
+  compareExam(files, logger);
   });
 
 // Lancement du programme
