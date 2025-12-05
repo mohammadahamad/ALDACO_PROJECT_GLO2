@@ -58,21 +58,20 @@ export function createExam(examName, idsArray, showDetails, logger) {
 
 // F7 : création de la commande testExam :
 export function testExam(examName, UserAnswersFile, logger) {
-  const examPath = path.join("./res/SujetB_data", `examen_${examName}.gift`);
-
   // Vérifier que les fichiers existent
-  if (!fs.existsSync(examPath)) {
+  if (!fs.existsSync(examen)) {
     logger.error(`Le fichier d'examen n'existe pas : ${examName}`);
     return;
   }
-  if (!fs.existsSync(userAnswersFile)) {
+  if (!fs.existsSync(UserAnswersFile)) {
     logger.error(`Le fichier de réponses n'existe pas : ${UserAnswersFile}`);
     return;
   }
 
   // Lire les fichiers :
-  const examContent = fs.readFileSync(examPath, "utf8");
-  const userAnswersContent = fs.readFileSync(UserAnswersFile, "utf8");
+  const examContent = fs.readFileSync("./res/examCreated/${examName}.gift", "utf8");
+  const userAnswersContent = fs.readFileSync("./res/UsersAnswers/${UserAnswersFile}.gift", "utf8");
+
 
   // Divise le contenu en questions
   // slice(1) pour retirer le premier élément vide avant le premier ::
@@ -82,51 +81,78 @@ export function testExam(examName, UserAnswersFile, logger) {
   let GoodAnswers = 0;
   let BadAnswers = 0;
   let TotalQuestions = 0;
-}
-
-// Note
+  // Note
 // Liste bonnes réponses / mauvaises
 // Liste réponses
+}
+
+
 
 
 // F8 : création de la commande statExam :
 export function statExam(examName, logger) {
-  // Ouvrir le fichier en argument
-  const examPath = path.join("./res/SujetB_data", `examen_${examName}.gift`);
+  // Lire le fichier en argument
+  const examen = fs.readFileSync("./res/examCreated/${examName}.gift", "utf8");
 
   // Vérifier que les fichiers existent
-  if (!fs.existsSync(examPath)) {
+  if (!fs.existsSync(examen)) {
     logger.error(`Le fichier d'examen n'existe pas : ${examName}`);
     return;
   }
-}
-
-  // Boucle pour récupérer chaque type de questions dans un array
-
+   // Boucle pour récupérer chaque type de questions dans un array
   // Compter le nombre de questions par type
   // Créer l'histogramme
   // Afficher et enregistrer l'histogramme
+}
+ 
 
-
-
-
- // compareExam : Faire une analyse comparative entre 2 fichiers (un examen ou un profil pré-calculé)  en comparant les types de question par pourcentage et différence relative (F9).
 
  // F9: création de la commande compareExam :
 export function compareExam(files, logger) {
+  const profiles = [] ; // liste de tous les fichiers avec les types et les pourcentages pour chacun 
 
-  // Fichiers = soit fichier gift ou alors profil pré-calculé
-  // Si c'est extension .gift, on calcule, sinon on next jusqu'au calcul des écarts
+  // Ouvrir les fichiers en argument :
+  for (let i = 0 ; i < files.length ; i++) {
+    const file = files[i];
 
-  // Ouvrir les fichiers en argument
-  for (const file of files) {
+    // Si c'est un examen :
     if (file.endsWith(".gift")){
-      const filePath = path.join("./res/SujetB_data", `examen_${file}.gift`);
+      const dataGIFT = fs.readFileSync(`./res/examCreated/${file}.gift`, "utf8");
+      // Parser le gift et comparer types de questions
+      // L'idée c'est d'avoir un 'profiles' du même type que l'approche pour le CSV
     }
-    
-  }
-  
 
+    // Si c'est un profil déjà calculé :
+    if (file.endsWith(".csv")){
+      const dataCSV = fs.readFileSync(`./res/userExam/${file}.csv`, "utf8");
+      // On stocke les valeurs dans un dictionnaire :
+      const DataPerFile = {}; // stocke tous les types et les pourcentages associés pour le fichier lu 
+
+      const lines = dataCSV.trim().split('\n');
+
+      let NumberOfQuestions = 0 ;
+
+      // Calcul nombre de questions totales pour pourcentages :
+      for (let line of lines) {
+        const [type, number] = line.split(',').map(s => s.trim());
+        const numberInt = parseInt(number, 10); // convertir le string en entier
+        NumberOfQuestions += numberInt;
+      }
+
+      for (let line of lines) {
+        const [type, number] = line.split(',').map(s => s.trim());
+        const numberInt = parseInt(number, 10) ;
+        // Calcul des pourcentages pour chaque type :
+        const percentage = ((numberInt / NumberOfQuestions) * 100);
+        DataPerFile[type] = percentage ;
+      }
+    }  
+    // On ajoute à la liste contenant les données sur tous les fichiers :
+    profiles.push({
+      fileName : file,
+      DataPerFile,
+    });
+  }
 }
 
 
