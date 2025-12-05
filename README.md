@@ -1,11 +1,23 @@
 # README - ALDACO_PROJECT_GLO2 - Sujet B
 
-## Liste des commandes disponibles
-à développer
-
-
 ## Description 
-Le SRYEM (Sealand Republic Youth Education Ministry) a lancé un projet de transformation numérique visant à moderniser les méthodes d'évaluation dans ses établissements. Pour cela, un utilitaire en ligne de commande a été mis  à disposition, permettant aux enseignants de composer, gérer et simuler des examens au format GIFT, tout en générant un fichier VCard.
+Le SRYEM (Sealand Republic Youth Education Ministry) a lancé un projet de transformation numérique visant à moderniser les méthodes d'évaluation dans ses établissements. Pour cela, un utilitaire en ligne de commande a été mis à disposition, permettant aux enseignants de composer, gérer, simuler et visualiser des examens au format GIFT, tout en s'identifiant via un fichier VCard.
+
+
+## Liste des commandes disponibles
+A partir du cahier des charges contenant 10 spécifications (notées F1 à F10), nous avons créé les fonctions suivantes :
+
+createExam : Composer un examen à partir d'une liste d'ID représentant l'identifiant des questions souhaitées (F3)
+Cette fonction répond également à des spécifications sous-jacentes : F2 (affichage détaillée d'une question), F4 (génération d'un fichier examen .gift) et F5 (vérification des contraintes d'unicité et de taille).
+
+searchInBank : Rechercher une question dans la banque de questions à partir d'un mot-clé, d'un ID ou d'un type de questions (F1).
+
+createVcard : Créer un fichier Vcard .vcf à partir de données utilisateurs : nom, adresse mail, école, et optionnellement son numéro de téléphone (F6).
+
+testExam : Simuler un examen qui permet de comparer un fichier regroupant les réponses d'un étudiant aux réponses de l'examen et d'obtenir une note ainsi que la liste des bonnes ou mauvaises réponses de l'utilisateur (F7).
+
+statExam : Obtenir des statistiques sur un examen (F8) via l'affichage d'un histogramme présentant le nombre de type de questions.
+
 
 
 ## Format de données
@@ -41,11 +53,20 @@ npm install
 
 ## Versions
 
-Version 1.0.0 : 
+Version 1.0 : 
 Création des commandes createExam, searchQuestion, createVcard, testExam, statExam.
 
-Version 1.0.1 : 
-Implémentation createExam
+Version 1.1 : 
+Découpage et gestion de la base de données pour la rendre utilisable.
+
+Version 1.2 :
+Implémentation des fonctions.
+
+Version 1.3 :
+Implémentation Vcard.
+
+Version 1.4 :
+Implémentation visualisation avec Vega-Lite.
 
 
 ## Liste des contributeurs 

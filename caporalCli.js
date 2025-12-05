@@ -25,12 +25,11 @@ cli
     });
   })
 
-  // Les fonctions F2, F4, F5, F9 et F10 n’ont pas été développées indépendamment car elles sont prises en charge par les autres fonctionnalités existantes.
 
-  // F1 : création de la commande searchQuestion
+  // F1 : création de la commande searchinBank
 
   .command(
-    "searchQuestion",
+    "searchinBank",
     "Chercher une question dans la banque de questions"
   )
   .argument("[kw]", "Mot-clé de recherche")
