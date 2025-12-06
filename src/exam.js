@@ -143,6 +143,52 @@ function check(idsArray, newQuestion) {
     idsArray.length >= 15 &&
     idsArray.length <= 20
   );
+
+// Création du CSV pour le profil de l'examen
+// fonction pour détecter le type de question
+function detectQuestionType(q) {
+  const text = q.toLowerCase();
+  const hasEqual = text.includes("=");
+  const hasTilde = text.includes("~");
+  const hasArrow = text.includes("->");
+  const hasTrueFalse = /(t|f|true|false)/.test(text);
+
+  if (hasEqual && hasTilde) return "choix_multiples";
+  if (hasTrueFalse) return "vrai_faux";
+  if (hasArrow) return "correspondance";
+  if (hasEqual && !hasTilde && !hasArrow) return "mot_manquant";
+  if (text.includes("{#")) return "numerique";
+  if (!hasEqual && !hasTilde && !hasArrow) return "question_ouverte";
+
+  return "autre";
+}
+
+const counters = {
+  choix_multiples: 0,
+  vrai_faux: 0,
+  correspondance: 0,
+  mot_manquant: 0,
+  numerique: 0,
+  question_ouverte: 0,
+};
+
+for (const question of questionsConfirmed) {
+  const type = detectQuestionType(question);
+  if (counters[type] !== undefined) {
+    counters[type]++;
+  }
+}
+
+const csvContent =
+  `choix multiples,${counters.choix_multiples}\n` +
+  `vrai-faux,${counters.vrai_faux}\n` +
+  `correspondance,${counters.correspondance}\n` +
+  `mot manquant,${counters.mot_manquant}\n` +
+  `numérique,${counters.numerique}\n` +
+  `question ouverte,${counters.question_ouverte}\n`;
+
+fs.writeFileSync(`"./res/csv"/${examName}.csv`, csvContent, "utf8");
+
 }
 
 // F7 : création de la commande testExam :
@@ -180,68 +226,7 @@ export function testExam(examName, UserAnswersFile, logger) {
   // Liste réponses
 }
 
-// F8 : création de la commande statExam :
-export async function statExam(examName, logger) {
-  // fonction qui decoupe le fichier en questions
-  function extractQuestions(content) {
-    return content
-      .split("}")
-      .map((q) => q.trim())
-      .filter((q) => q.length > 0)
-      .map((q) => q + "}");
-  }
 
-  // fonction qui detecte le type de question
-  function detectType(block) {
-    const lower = block.toLowerCase();
-
-    if (block.includes("=") && block.includes("~")) {
-      return "qcm";
-    }
-
-    if (
-      lower.includes("{t}") ||
-      lower.includes("{f}") ||
-      lower.includes("{true}") ||
-      lower.includes("{false}")
-    ) {
-      return "vrai/faux";
-    }
-
-    return "ouverte";
-  }
-
-  // fonction qui compte le type de question
-  function countTypes(arr) {
-    const obj = {};
-
-    arr.forEach((t) => {
-      obj[t] = (obj[t] || 0) + 1;
-    });
-
-    return Object.entries(obj).map(([type, n]) => ({
-      type,
-      n,
-    }));
-  }
-
-  // on recupere la position de l'examen a analyser
-  const examPath = path.join("./res/SujetB_data", `${examName}.gift`);
-
-  // on verifie que le fichier de l'examen existe
-  if (!fs.existsSync(examPath)) {
-    logger.error(`Le fichier d'examen n'existe pas : ${examName}`);
-    return;
-  }
-
-  // lecture du contenu de l'examen
-  const content = fs.readFileSync(examPath, "utf8");
-
-  // traitement des données
-  const questions = extractQuestions(content);
-  const types = questions.map((q) => detectType(q));
-  const dataset = countTypes(types);
-}
 
 // F9: création de la commande compareExam :
 export async function compareExam(files, logger) {
