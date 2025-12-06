@@ -265,6 +265,8 @@ export function compareExam(files, logger) {
       DataPerFile,
     });
   }
+// tout réunir en un fichier CSV pour vegalite après
+  
 }
 
 

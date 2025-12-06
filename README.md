@@ -48,6 +48,9 @@ type, nombre (CSV simplifié)
 
 npm install
 
+Pour installer Vega, Vega-Lite et Canvas :
+npm install vega vega-lite canvas
+
 
 ## Utilisation 
 
