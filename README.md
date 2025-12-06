@@ -18,7 +18,7 @@ testExam : Simuler un examen qui permet de comparer un fichier regroupant les r�
 
 statExam : Obtenir des statistiques sur un examen (F8) via l'affichage d'un histogramme présentant le nombre de type de questions.
 
-compareExam : Faire une analyse comparative entre 2 fichiers (un examen au format gift ou un profil pré-calculé au format Profil)  en comparant les types de question par pourcentage et différence relative (F9). Pour cela, on transforme les éventuels fichiers .gift en paramètres d'entrée en profil pour les traiter comme les éventuels fichiers .csv qui sont des profils pré-calculés. Ensuite, on renvoie une liste de tous les fichiers indiquant à chaque fois, pour chaque type, son pourcentage. On affiche aussi un graphique pour mieux visualiser, pour chaque fichier, la répartition des types.
+compareExam : Faire une analyse comparative entre 2 fichiers (un examen au format gift ou un profil pré-calculé au format Profil)  en comparant les types de question par pourcentage et différence relative (F9). Pour cela, on stocke toutes les données dans un seul et unique fichier csv du type fileName, type, percentage afin d'avoir une visualisation graphique claire avec Vega-Lite pour mieux visualiser, pour chaque fichier, la répartition des types.
 
 
 

@@ -95,25 +95,25 @@ cli
 
   .command("statExam", "Générer des statistiques à partir d'un examen")
   .argument("<FileName>", "Nom du fichier de l'examen à analyser")
-  .action(({ args, logger }) => {
+  .action(async({ args, logger }) => {
     // Appel de la fonction statExam qui se trouve dans exam.js
-    statExam(args.FileName, logger);
+    await statExam(args.FileName, logger);
   })
 
   // F9 : création de la commande compareExam :
 
   .command(
     "compareExam",
-    "Comparer la répartition de types de questions entre 2 examens"
+    "Comparer la répartition de types de questions entre au moins 2 examens"
   )
-  .argument("<Files>", "Liste des fichiers à comparer (au moins 2)")
-  .action(({ args, logger }) => {
+  .argument("<Files>", "Liste des fichiers à comparer")
+  .action(async({ args, logger }) => {
     const files = args.Files; // Stocker fichiers dans un tableau
     if (files.length < 2) {
       logger.warn("Vous devez indiquer au moins deux fichiers à comparer.");
       return;
     }
-    compareExam(files, logger);
+    await compareExam(files, logger);
   });
 
 // Lancement du programme

@@ -250,9 +250,10 @@ export async function statExam(examName, logger) {
   console.log("Histogramme généré :", outputPath);
 }
 
+
 // F9: création de la commande compareExam :
-export function compareExam(files, logger) {
-  const profiles = []; // liste de tous les fichiers avec les types et les pourcentages pour chacun
+export async function compareExam(files, logger) {
+  const profilesVega = []; // données exploitables pour Vega-Lite
 
   // Ouvrir les fichiers en argument :
   for (let i = 0; i < files.length; i++) {
@@ -264,8 +265,8 @@ export function compareExam(files, logger) {
         `./res/examCreated/${file}.gift`,
         "utf8"
       );
-      // Parser le gift et comparer types de questions
-      // L'idée c'est d'avoir un 'profiles' du même type que l'approche pour le CSV
+      // FAIRE AVEC LA FONCTION DE DAMARIS
+      
     }
 
     // Si c'est un profil déjà calculé :
@@ -290,14 +291,86 @@ export function compareExam(files, logger) {
         const numberInt = parseInt(number, 10);
         // Calcul des pourcentages pour chaque type :
         const percentage = (numberInt / NumberOfQuestions) * 100;
-        DataPerFile[type] = percentage;
       }
     }
     // On ajoute à la liste contenant les données sur tous les fichiers :
-    profiles.push({
+    profilesVega.push({
       fileName: file,
-      DataPerFile,
+      type,
+      percentage
     });
   }
-  // tout réunir en un fichier CSV pour vegalite après
+
+  
+  // specifications Vega-Lite
+  const specVL = {
+    $schema: "https://vega.github.io/schema/vega-lite/v5.json",
+    description: "Histogramme des types de questions selon les examens",
+    width: 500,
+    height: 350,
+    data: {
+      values: profilesVega,
+    },
+    mark: "bar",
+    encoding: {
+      x: {
+        field: "fileName",
+        type: "nominal",
+        title: "Fichiers",
+      },
+      y: {
+        field: "percentage",
+        type: "quantitative",
+        title: "Pourcentage (%)",
+        scale: {
+          domain: [0, 100]
+        }
+      },
+      color: {
+        field: "type",
+        type: "nominal",
+        "scale": {
+        "domain": ["qcm", "vrai/faux", "ouverte"],
+        "range": ["#9467bd", "#b2e69eff", "#aec7e8"]
+      },
+        "title": "Types de questions"
+      },
+    },
+  };
+
+  // Compilation Vega-Lite en Vega
+  const vegaSpec = vegaLite.compile(specVL).spec;
+
+  // Initialisation du moteur Vega
+  const view = new vega.View(vega.parse(vegaSpec), {
+    renderer: "none",
+    logLevel: vega.Warn,
+    loader: vega.loader(),
+  });
+
+  // Rendu PNG
+  const canvas = createCanvas(500, 350);
+  view.initialize(canvas);
+  await view.toCanvas();
+
+  // Sauvegarder la spécification sans remplacer les éventuels comparaisons déjà existantes dans le répertoire :
+  const resDir = './res';
+  let comparisonNumber = 1;
+
+  // Trouver tous les fichiers comparison_X.json
+  const comparisonFiles = existingFiles.filter(f => f.match(/^comparison_\d+\.json$/));
+    
+  if (comparisonFiles.length > 0) {
+    // Extraire les numéros et trouver le max
+    const numbers = comparisonFiles.map(f => {
+      const match = f.match(/^comparison_(\d+)\.json$/);
+      return match ? parseInt(match[1], 10) : 0;
+    });
+    comparisonNumber = Math.max(...numbers) + 1;
+  }
+
+  const outputPath = `./res/stats/comparison_${comparisonNumber}.jpg`;
+  fs.writeFileSync(outputPath, canvas.toBuffer("image/png"));
+  console.log("Histogramme généré :", outputPath);
+
 }
