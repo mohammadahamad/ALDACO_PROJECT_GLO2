@@ -84,13 +84,3 @@ export function displayQuestions(questionsArray, showAll) {
     }
   }
 }
-
-/**
- * Récupère tous les fichiers d'un répertoire donné
- *
- * @param {string} dirPath Chemin du répertoire
- * @returns Liste des fichiers dans le répertoire
- */
-function getAllFilesFromDir(dirPath) {
-  return fs.readdirSync(dirPath);
-}

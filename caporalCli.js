@@ -46,11 +46,18 @@ cli
   .command("createExam", "Créer un examen à partir d'IDs")
   .argument("<examName>", "Nom de l'examen")
   .argument("<ids>", "Liste d'IDs séparés par des virgules")
+  .argument("<Author>", "Nom de l'auteur de l'examen")
   .option("--showDetails", "Afficher les détails des questions")
   .action(({ args, options, logger }) => {
     // Appel de la fonction createExam qui se trouve dans exam.js
     const idsArray = args.ids.split(",").map((x) => x.trim());
-    createExam(args.examName, idsArray, options.showDetails, logger);
+    createExam(
+      args.examName,
+      idsArray,
+      args.Author,
+      options.showDetails,
+      logger
+    );
   })
 
   // F6 : création de la commande createVcard :

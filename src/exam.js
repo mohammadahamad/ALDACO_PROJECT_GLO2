@@ -3,6 +3,7 @@ import { searchInBank } from "./search.js";
 import * as vega from "vega";
 import * as vegaLite from "vega-lite";
 import { createCanvas } from "canvas";
+import readline from "readline";
 
 /**
  * Fonction pour récupérer les questions dans la banque de questions avec des critères de recherche.
@@ -13,8 +14,14 @@ import { createCanvas } from "canvas";
  * @param {boolean} showAll Indicateur pour afficher tout le contenu de la question
  */
 
-// F3 : création de la commande createExam : 
-export function createExam(examName, idsArray, showDetails, logger) {
+// F3 : création de la commande createExam :
+export async function createExam(
+  examName,
+  idsArray,
+  author,
+  showDetails,
+  logger
+) {
   // Vérification du nombre d'IDs uniques (entre 15 et 20)
   let uniqueIds = [...new Set(idsArray)];
   if (uniqueIds.length !== idsArray.length) {
@@ -28,36 +35,71 @@ export function createExam(examName, idsArray, showDetails, logger) {
     return;
   }
 
-  // Récupération des questions correspondantes aux IDs fournis
-  const questionsFound = [];
-  searchInBank(null, idsArray, null).then((results) => {
-    questionsFound.push(...results);
+  // Confirmation des IDs
+  const questionsConfirmed = [];
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+  });
 
-    if (questionsFound.length < idsArray.length) {
-      console.log(
-        "[ERREUR] Certaines questions n'ont pas été trouvées dans la banque de questions."
-      );
-      return;
-    }
-
-    // Création et enregistrement de l'examen au format GIFT
-    let examContent = "";
-    questionsFound.forEach((question) => {
-      examContent += "::" + question.id + ":: " + question.content + "\n";
-    });
-    fs.writeFile(`./res/examCreated/${examName}.gift`, examContent, (err) => {
-      if (err) {
-        console.error(
-          "[ERREUR] Erreur lors de l'écriture du fichier d'examen :",
-          err
+  for (const id of idsArray) {
+    await searchInBank(null, [id], null).then(async (results) => {
+      if (results.length === 0) {
+        console.log(
+          `[ERREUR] La question avec l'ID ${id} n'a pas été trouvée dans la banque de questions.`
         );
-      } else {
-        console.log("[INFO] Fichier d'examen créé avec succès !");
+        return;
+      }
+      console.log("Question trouvée pour l'id " + id + " :");
+      console.log(results);
+      const answer = await ask("Confirmer son ajout ? [y/n]\n", rl);
+      if (answer.toLowerCase() === "y") {
+        questionsConfirmed.push(...results);
       }
     });
+  }
+
+  rl.close();
+
+  // Vérification que toutes les questions ont été confirmées
+  if (questionsConfirmed.length < idsArray.length) {
+    console.log(
+      "[ERREUR] Veuillez recommencer avec tous les IDs des questions à inclure dans l'examen."
+    );
+    return;
+  }
+
+  // Création et enregistrement de l'examen au format GIFT
+  let examContent = "" + author + "\n\n";
+  questionsConfirmed.forEach((question) => {
+    examContent += "::" + question.id + ":: " + question.content + "\n";
+  });
+  fs.writeFile(`./res/examCreated/${examName}.gift`, examContent, (err) => {
+    if (err) {
+      console.error(
+        "[ERREUR] Erreur lors de l'écriture du fichier d'examen :",
+        err
+      );
+    } else {
+      console.log("[INFO] Fichier d'examen créé avec succès !");
+    }
   });
 }
 
+/**
+ * Fonction pour poser une question à l'utilisateur dans le terminal et récupérer sa réponse.
+ *
+ * @param {*} question  La question à poser
+ * @param {*} rl Interface readline pour l'entrée/sortie
+ * @returns {Promise<string>} La réponse de l'utilisateur
+ */
+function ask(question, rl) {
+  return new Promise((resolve) => {
+    rl.question(question, (answer) => {
+      resolve(answer);
+    });
+  });
+}
 
 // F7 : création de la commande testExam :
 export function testExam(examName, UserAnswersFile, logger) {
@@ -72,9 +114,14 @@ export function testExam(examName, UserAnswersFile, logger) {
   }
 
   // Lire les fichiers :
-  const examContent = fs.readFileSync("./res/examCreated/${examName}.gift", "utf8");
-  const userAnswersContent = fs.readFileSync("./res/UsersAnswers/${UserAnswersFile}.gift", "utf8");
-
+  const examContent = fs.readFileSync(
+    "./res/examCreated/${examName}.gift",
+    "utf8"
+  );
+  const userAnswersContent = fs.readFileSync(
+    "./res/UsersAnswers/${UserAnswersFile}.gift",
+    "utf8"
+  );
 
   // Divise le contenu en questions
   // slice(1) pour retirer le premier élément vide avant le premier ::
@@ -85,29 +132,23 @@ export function testExam(examName, UserAnswersFile, logger) {
   let BadAnswers = 0;
   let TotalQuestions = 0;
   // Note
-// Liste bonnes réponses / mauvaises
-// Liste réponses
+  // Liste bonnes réponses / mauvaises
+  // Liste réponses
 }
-
-
-
-
-
 
 // F8 : création de la commande statExam :
 export async function statExam(examName, logger) {
-
-// fonction qui decoupe le fichier en questions
+  // fonction qui decoupe le fichier en questions
   function extractQuestions(content) {
     return content
       .split("}")
-      .map(q => q.trim())
-      .filter(q => q.length > 0)
-      .map(q => q + "}");
+      .map((q) => q.trim())
+      .filter((q) => q.length > 0)
+      .map((q) => q + "}");
   }
 
-// fonction qui detecte le type de question
-// -> a completer ici jsute vrai faux ou qcm
+  // fonction qui detecte le type de question
+  // -> a completer ici jsute vrai faux ou qcm
   function detectType(block) {
     const lower = block.toLowerCase();
 
@@ -131,143 +172,133 @@ export async function statExam(examName, logger) {
   function countTypes(arr) {
     const obj = {};
 
-    arr.forEach(t => {
+    arr.forEach((t) => {
       obj[t] = (obj[t] || 0) + 1;
     });
 
     return Object.entries(obj).map(([type, n]) => ({
       type,
-      n
+      n,
     }));
   }
 
-// on recupere la position de l'examen a analyser
+  // on recupere la position de l'examen a analyser
   const examPath = path.join("./res/SujetB_data", `${examName}.gift`);
 
-// on verifie que le fichier de l'examen existe
+  // on verifie que le fichier de l'examen existe
   if (!fs.existsSync(examPath)) {
     logger.error(`Le fichier d'examen n'existe pas : ${examName}`);
     return;
   }
 
-// lecture du contenu de l'examen
+  // lecture du contenu de l'examen
   const content = fs.readFileSync(examPath, "utf8");
 
-// traitement des données 
+  // traitement des données
   const questions = extractQuestions(content);
-  const types = questions.map(q => detectType(q));
+  const types = questions.map((q) => detectType(q));
   const dataset = countTypes(types);
 
-// specifications Vega-Lite
+  // specifications Vega-Lite
   const specVL = {
     $schema: "https://vega.github.io/schema/vega-lite/v5.json",
     description: "Histogramme des types de questions",
     width: 500,
     height: 350,
     data: {
-      values: dataset
+      values: dataset,
     },
     mark: "bar",
     encoding: {
       x: {
         field: "type",
         type: "nominal",
-        title: "Type de question"
+        title: "Type de question",
       },
       y: {
         field: "n",
         type: "quantitative",
-        title: "Nombre"
+        title: "Nombre",
       },
       color: {
         field: "type",
-        type: "nominal"
-      }
-    }
+        type: "nominal",
+      },
+    },
   };
 
-// Compilation Vega-Lite en Vega
+  // Compilation Vega-Lite en Vega
   const vegaSpec = vegaLite.compile(specVL).spec;
 
-// Initialisation du moteur Vega
-  const view = new vega.View(
-    vega.parse(vegaSpec),
-    {
-      renderer: "none",
-      logLevel: vega.Warn,
-      loader: vega.loader()
-    }
-  );
+  // Initialisation du moteur Vega
+  const view = new vega.View(vega.parse(vegaSpec), {
+    renderer: "none",
+    logLevel: vega.Warn,
+    loader: vega.loader(),
+  });
 
-// Rendu PNG
+  // Rendu PNG
   const canvas = createCanvas(500, 350);
   view.initialize(canvas);
   await view.toCanvas();
 
-// Sauvegarde du PNG
+  // Sauvegarde du PNG
   const outputDir = "./res/stats";
   const outputPath = path.join(outputDir, `${examName}.png`);
 
-  fs.writeFileSync(
-    outputPath,
-    canvas.toBuffer("image/png")
-  );
+  fs.writeFileSync(outputPath, canvas.toBuffer("image/png"));
 
   console.log("Histogramme généré :", outputPath);
 }
 
-
-
-
- // F9: création de la commande compareExam :
+// F9: création de la commande compareExam :
 export function compareExam(files, logger) {
-  const profiles = [] ; // liste de tous les fichiers avec les types et les pourcentages pour chacun 
+  const profiles = []; // liste de tous les fichiers avec les types et les pourcentages pour chacun
 
   // Ouvrir les fichiers en argument :
-  for (let i = 0 ; i < files.length ; i++) {
+  for (let i = 0; i < files.length; i++) {
     const file = files[i];
 
     // Si c'est un examen :
-    if (file.endsWith(".gift")){
-      const dataGIFT = fs.readFileSync(`./res/examCreated/${file}.gift`, "utf8");
+    if (file.endsWith(".gift")) {
+      const dataGIFT = fs.readFileSync(
+        `./res/examCreated/${file}.gift`,
+        "utf8"
+      );
       // Parser le gift et comparer types de questions
       // L'idée c'est d'avoir un 'profiles' du même type que l'approche pour le CSV
     }
 
     // Si c'est un profil déjà calculé :
-    if (file.endsWith(".csv")){
+    if (file.endsWith(".csv")) {
       const dataCSV = fs.readFileSync(`./res/userExam/${file}.csv`, "utf8");
       // On stocke les valeurs dans un dictionnaire :
-      const DataPerFile = {}; // stocke tous les types et les pourcentages associés pour le fichier lu 
+      const DataPerFile = {}; // stocke tous les types et les pourcentages associés pour le fichier lu
 
-      const lines = dataCSV.trim().split('\n');
+      const lines = dataCSV.trim().split("\n");
 
-      let NumberOfQuestions = 0 ;
+      let NumberOfQuestions = 0;
 
       // Calcul nombre de questions totales pour pourcentages :
       for (let line of lines) {
-        const [type, number] = line.split(',').map(s => s.trim());
+        const [type, number] = line.split(",").map((s) => s.trim());
         const numberInt = parseInt(number, 10); // convertir le string en entier
         NumberOfQuestions += numberInt;
       }
 
       for (let line of lines) {
-        const [type, number] = line.split(',').map(s => s.trim());
-        const numberInt = parseInt(number, 10) ;
+        const [type, number] = line.split(",").map((s) => s.trim());
+        const numberInt = parseInt(number, 10);
         // Calcul des pourcentages pour chaque type :
-        const percentage = ((numberInt / NumberOfQuestions) * 100);
-        DataPerFile[type] = percentage ;
+        const percentage = (numberInt / NumberOfQuestions) * 100;
+        DataPerFile[type] = percentage;
       }
-    }  
+    }
     // On ajoute à la liste contenant les données sur tous les fichiers :
     profiles.push({
-      fileName : file,
+      fileName: file,
       DataPerFile,
     });
   }
-// tout réunir en un fichier CSV pour vegalite après
-  
+  // tout réunir en un fichier CSV pour vegalite après
 }
-
-
-
