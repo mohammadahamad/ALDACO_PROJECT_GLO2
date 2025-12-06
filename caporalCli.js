@@ -1,19 +1,11 @@
-import { createExam, testExam, statExam } from "./src/exam.js";
+import { createExam, testExam } from "./src/exam.js";
 import { searchInBank, displayQuestions } from "./src/search.js";
 import { createVcard } from "./src/vcard.js";
+import fs from "fs";
+import caporal from "@caporal/core";
+const { program } = caporal;
 
-/*
-const colors = require("colors");
-
-const vg = require("vega");
-const vegalite = require("vega-lite");*/
-
-const cli = require("@caporal/core").default;
-
-cli
-  .version("projetB")
-  .version("1.0.0")
-
+program
   .command("readme", "Display the README.md file")
   .action(({ args, options, logger }) => {
     fs.readFile("./README.md", "utf8", function (err, data) {
@@ -103,7 +95,19 @@ cli
   .action(async ({ args, logger }) => {
     const files = args.Files; // Stocker fichiers dans un tableau
     await compareExam(files, logger);
+  })
+  .command("saveRessourse", "Sauvegarde un fichier dans un répertoire donné")
+  .argument("<pathDist>", "Chemin du répertoire de destination")
+  .argument("<pathSource>", "Chemin du fichier source")
+  .action(({ args, logger }) => {
+    fs.copyFile(args.pathSource, args.pathDist, (err) => {
+      if (err) {
+        console.error("[ERREUR] Erreur lors de la copie du fichier :", err);
+      } else {
+        console.log("[INFO] Fichier copié avec succès !");
+      }
+    });
   });
 
 // Lancement du programme
-cli.run(process.argv.slice(2));
+program.run(process.argv.slice(2));
