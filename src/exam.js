@@ -1,5 +1,8 @@
 import fs from "fs";
 import { searchInBank } from "./search.js";
+import * as vega from "vega";
+import * as vegaLite from "vega-lite";
+import { createCanvas } from "canvas";
 
 /**
  * Fonction pour récupérer les questions dans la banque de questions avec des critères de recherche.
@@ -89,22 +92,131 @@ export function testExam(examName, UserAnswersFile, logger) {
 
 
 
-// F8 : création de la commande statExam :
-export function statExam(examName, logger) {
-  // Lire le fichier en argument
-  const examen = fs.readFileSync("./res/examCreated/${examName}.gift", "utf8");
 
-  // Vérifier que les fichiers existent
-  if (!fs.existsSync(examen)) {
+
+// F8 : création de la commande statExam :
+export async function statExam(examName, logger) {
+
+// fonction qui decoupe le fichier en questions
+  function extractQuestions(content) {
+    return content
+      .split("}")
+      .map(q => q.trim())
+      .filter(q => q.length > 0)
+      .map(q => q + "}");
+  }
+
+// fonction qui detecte le type de question
+// -> a completer ici jsute vrai faux ou qcm
+  function detectType(block) {
+    const lower = block.toLowerCase();
+
+    if (block.includes("=") && block.includes("~")) {
+      return "qcm";
+    }
+
+    if (
+      lower.includes("{t}") ||
+      lower.includes("{f}") ||
+      lower.includes("{true}") ||
+      lower.includes("{false}")
+    ) {
+      return "vrai/faux";
+    }
+
+    return "ouverte";
+  }
+
+  // fonction qui compte le type de question
+  function countTypes(arr) {
+    const obj = {};
+
+    arr.forEach(t => {
+      obj[t] = (obj[t] || 0) + 1;
+    });
+
+    return Object.entries(obj).map(([type, n]) => ({
+      type,
+      n
+    }));
+  }
+
+// on recupere la position de l'examen a analyser
+  const examPath = path.join("./res/SujetB_data", `${examName}.gift`);
+
+// on verifie que le fichier de l'examen existe
+  if (!fs.existsSync(examPath)) {
     logger.error(`Le fichier d'examen n'existe pas : ${examName}`);
     return;
   }
-   // Boucle pour récupérer chaque type de questions dans un array
-  // Compter le nombre de questions par type
-  // Créer l'histogramme
-  // Afficher et enregistrer l'histogramme
+
+// lecture du contenu de l'examen
+  const content = fs.readFileSync(examPath, "utf8");
+
+// traitement des données 
+  const questions = extractQuestions(content);
+  const types = questions.map(q => detectType(q));
+  const dataset = countTypes(types);
+
+// specifications Vega-Lite
+  const specVL = {
+    $schema: "https://vega.github.io/schema/vega-lite/v5.json",
+    description: "Histogramme des types de questions",
+    width: 500,
+    height: 350,
+    data: {
+      values: dataset
+    },
+    mark: "bar",
+    encoding: {
+      x: {
+        field: "type",
+        type: "nominal",
+        title: "Type de question"
+      },
+      y: {
+        field: "n",
+        type: "quantitative",
+        title: "Nombre"
+      },
+      color: {
+        field: "type",
+        type: "nominal"
+      }
+    }
+  };
+
+// Compilation Vega-Lite en Vega
+  const vegaSpec = vegaLite.compile(specVL).spec;
+
+// Initialisation du moteur Vega
+  const view = new vega.View(
+    vega.parse(vegaSpec),
+    {
+      renderer: "none",
+      logLevel: vega.Warn,
+      loader: vega.loader()
+    }
+  );
+
+// Rendu PNG
+  const canvas = createCanvas(500, 350);
+  view.initialize(canvas);
+  await view.toCanvas();
+
+// Sauvegarde du PNG
+  const outputDir = "./res/stats";
+  const outputPath = path.join(outputDir, `${examName}.png`);
+
+  fs.writeFileSync(
+    outputPath,
+    canvas.toBuffer("image/png")
+  );
+
+  console.log("Histogramme généré :", outputPath);
 }
- 
+
+
 
 
  // F9: création de la commande compareExam :
