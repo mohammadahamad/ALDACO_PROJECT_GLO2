@@ -47,17 +47,10 @@ cli
   .argument("<examName>", "Nom de l'examen")
   .argument("<ids>", "Liste d'IDs séparés par des virgules")
   .argument("<Author>", "Nom de l'auteur de l'examen")
-  .option("--showDetails", "Afficher les détails des questions")
-  .action(({ args, options, logger }) => {
+  .action(({ args, logger }) => {
     // Appel de la fonction createExam qui se trouve dans exam.js
     const idsArray = args.ids.split(",").map((x) => x.trim());
-    createExam(
-      args.examName,
-      idsArray,
-      args.Author,
-      options.showDetails,
-      logger
-    );
+    createExam(args.examName, idsArray, args.Author);
   })
 
   // F6 : création de la commande createVcard :
@@ -95,7 +88,7 @@ cli
 
   .command("statExam", "Générer des statistiques à partir d'un examen")
   .argument("<FileName>", "Nom du fichier de l'examen à analyser")
-  .action(async({ args, logger }) => {
+  .action(async ({ args, logger }) => {
     // Appel de la fonction statExam qui se trouve dans exam.js
     await statExam(args.FileName, logger);
   })
@@ -107,7 +100,7 @@ cli
     "Comparer la répartition de types de questions dans un fichier ou entre plusieurs fichiers"
   )
   .argument("<Files>", "Liste des fichiers à comparer")
-  .action(async({ args, logger }) => {
+  .action(async ({ args, logger }) => {
     const files = args.Files; // Stocker fichiers dans un tableau
     await compareExam(files, logger);
   });

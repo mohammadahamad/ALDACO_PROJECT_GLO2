@@ -15,23 +15,12 @@ import readline from "readline";
  */
 
 // F3 : création de la commande createExam :
-export async function createExam(
-  examName,
-  idsArray,
-  author,
-  showDetails,
-  logger
-) {
+export async function createExam(examName, idsArray, author) {
   // Vérification du nombre d'IDs uniques (entre 15 et 20)
-  let uniqueIds = [...new Set(idsArray)];
-  if (uniqueIds.length !== idsArray.length) {
-    console.log(
-      "[ERREUR] Veuillez indiquer des identifiants de questions uniques."
+  if (!check(idsArray)) {
+    console$.log(
+      "[ERREUR] Veuillez indiquer entre 15 et 20 identifiants de questions uniques."
     );
-    return;
-  }
-  if (uniqueIds.size < 15 || uniqueIds.size > 20) {
-    console.log("[ERREUR] Veuillez indiquer entre 15 et 20 questions.");
     return;
   }
 
@@ -59,15 +48,46 @@ export async function createExam(
     });
   }
 
-  rl.close();
-
-  // Vérification que toutes les questions ont été confirmées
-  if (questionsConfirmed.length < idsArray.length) {
+  // Vérification que toutes les questions ont été confirmées sinon proposer un remplacement
+  while (questionsConfirmed.length < idsArray.length) {
     console.log(
-      "[ERREUR] Veuillez recommencer avec tous les IDs des questions à inclure dans l'examen."
+      "[INFO] Nombre de questions confirmées : " + questionsConfirmed.length
     );
-    return;
+    const missingCount = idsArray.length - questionsConfirmed.length;
+    console.log(
+      `[INFO] Il manque ${missingCount} questions. Veuillez fournir un ID de remplacement.`
+    );
+    let newId = await ask("Entrez l'ID de la question de remplacement :\n", rl);
+    let question = null;
+
+    // Recherche de la nouvelle question jusqu'à ce qu'une valide soit trouvée
+    while (!question) {
+      await searchInBank(null, [newId], null).then(async (results) => {
+        if (results.length === 0) {
+          console.log(
+            `[ERREUR] La question avec l'ID ${newId} n'a pas été trouvée dans la banque de questions. Veuillez en fournir un autre.`
+          );
+          newId = await ask(
+            "Entrez l'ID de la question de remplacement :\n",
+            rl
+          );
+        } else {
+          question = results[0];
+        }
+      });
+    }
+
+    //vérification de la question et confirmation de son ajout
+    console.log("Question trouvée pour l'id " + newId + " :");
+    console.log(question);
+    const answer = await ask("Confirmer son ajout ? [y/n]\n", rl);
+
+    if (answer.toLowerCase() === "y" && check(questionsConfirmed, question)) {
+      questionsConfirmed.push(question);
+    }
   }
+
+  rl.close();
 
   // Création et enregistrement de l'examen au format GIFT
   let examContent = "" + author + "\n\n";
@@ -99,6 +119,30 @@ function ask(question, rl) {
       resolve(answer);
     });
   });
+}
+
+/**
+ *  Vérifie si les IDs sont uniques et dans le bon nombre
+ *
+ * @param {*} idsArray Tableau des IDs
+ * @param {*} newQuestion Nouvelle question à vérifier
+ * @returns {boolean} Indique si les IDs sont valides
+ */
+function check(idsArray, newQuestion) {
+  if (newQuestion) {
+    for (let id of idsArray) {
+      if (newQuestion.id === id) {
+        return false;
+      }
+    }
+    return true;
+  }
+  let uniqueIds = [...new Set(idsArray)];
+  return (
+    uniqueIds.length !== idsArray.length &&
+    idsArray.length >= 15 &&
+    idsArray.length <= 20
+  );
 }
 
 // F7 : création de la commande testExam :
@@ -199,7 +243,6 @@ export async function statExam(examName, logger) {
   const dataset = countTypes(types);
 }
 
-
 // F9: création de la commande compareExam :
 export async function compareExam(files, logger) {
   const profilesVega = []; // données exploitables pour Vega-Lite
@@ -230,13 +273,12 @@ export async function compareExam(files, logger) {
         profilesVega.push({
           fileName: file,
           type,
-          percentage: parseFloat(percentage)
+          percentage: parseFloat(percentage),
         });
-      }  
-    }
-    else{
+      }
+    } else {
       logger.error(`Le profil d'examen n'existe pas : ${file}`);
-    }   
+    }
   }
 
   // specifications Vega-Lite
@@ -260,17 +302,17 @@ export async function compareExam(files, logger) {
         type: "quantitative",
         title: "Pourcentage (%)",
         scale: {
-          domain: [0, 100]
-        }
+          domain: [0, 100],
+        },
       },
       color: {
         field: "type",
         type: "nominal",
-        "scale": {
-        "domain": ["qcm", "vrai/faux", "ouverte"], // A MODIFIER 
-        "range": ["#9467bd", "#b2e69eff", "#aec7e8"]
-      },
-        "title": "Types de questions"
+        scale: {
+          domain: ["qcm", "vrai/faux", "ouverte"], // A MODIFIER
+          range: ["#9467bd", "#b2e69eff", "#aec7e8"],
+        },
+        title: "Types de questions",
       },
     },
   };
@@ -292,14 +334,16 @@ export async function compareExam(files, logger) {
 
   // Sauvegarder la spécification sans remplacer les éventuels comparaisons déjà existantes dans le répertoire :
   let comparisonNumber = 1;
-  const existingFiles = fs.readdirSync('./res/stats');
+  const existingFiles = fs.readdirSync("./res/stats");
 
   // Trouver tous les fichiers comparison_X.png
-  const comparisonFiles = existingFiles.filter(f => f.match(/^comparison_\d+\.png$/));
-    
+  const comparisonFiles = existingFiles.filter((f) =>
+    f.match(/^comparison_\d+\.png$/)
+  );
+
   if (comparisonFiles.length > 0) {
     // Extraire les numéros et trouver le max
-    const numbers = comparisonFiles.map(f => {
+    const numbers = comparisonFiles.map((f) => {
       const match = f.match(/^comparison_(\d+)\.png$/);
       return match ? parseInt(match[1], 10) : 0;
     });

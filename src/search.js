@@ -1,4 +1,6 @@
 import fs from "fs";
+import readline from "readline";
+import { unique } from "vega-lite";
 
 /**
  * Fonction pour récupérer les questions dans la banque de questions avec des critères de recherche.
@@ -83,4 +85,14 @@ export function displayQuestions(questionsArray, showAll) {
       console.log("\n[content] :\n" + question.content);
     }
   }
+}
+
+/**
+ * Récupère tous les fichiers d'un répertoire donné
+ *
+ * @param {string} dirPath Chemin du répertoire
+ * @returns Liste des fichiers dans le répertoire
+ */
+export function getAllFilesFromDir(dirPath) {
+  return fs.readdirSync(dirPath);
 }
