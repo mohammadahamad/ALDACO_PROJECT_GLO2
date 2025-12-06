@@ -148,7 +148,6 @@ export async function statExam(examName, logger) {
   }
 
   // fonction qui detecte le type de question
-  // -> a completer ici jsute vrai faux ou qcm
   function detectType(block) {
     const lower = block.toLowerCase();
 
