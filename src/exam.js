@@ -197,57 +197,6 @@ export async function statExam(examName, logger) {
   const questions = extractQuestions(content);
   const types = questions.map((q) => detectType(q));
   const dataset = countTypes(types);
-
-  // specifications Vega-Lite
-  const specVL = {
-    $schema: "https://vega.github.io/schema/vega-lite/v5.json",
-    description: "Histogramme des types de questions",
-    width: 500,
-    height: 350,
-    data: {
-      values: dataset,
-    },
-    mark: "bar",
-    encoding: {
-      x: {
-        field: "type",
-        type: "nominal",
-        title: "Type de question",
-      },
-      y: {
-        field: "n",
-        type: "quantitative",
-        title: "Nombre",
-      },
-      color: {
-        field: "type",
-        type: "nominal",
-      },
-    },
-  };
-
-  // Compilation Vega-Lite en Vega
-  const vegaSpec = vegaLite.compile(specVL).spec;
-
-  // Initialisation du moteur Vega
-  const view = new vega.View(vega.parse(vegaSpec), {
-    renderer: "none",
-    logLevel: vega.Warn,
-    loader: vega.loader(),
-  });
-
-  // Rendu PNG
-  const canvas = createCanvas(500, 350);
-  view.initialize(canvas);
-  await view.toCanvas();
-
-  // Sauvegarde du PNG
-  const outputDir = "./res/stats";
-  const outputPath = path.join(outputDir, `${examName}.png`);
-
-  fs.writeFileSync(outputPath, canvas.toBuffer("image/png"));
-
-  console.log("Histogramme généré :", outputPath);
 }
 
 
@@ -258,22 +207,8 @@ export async function compareExam(files, logger) {
   // Ouvrir les fichiers en argument :
   for (let i = 0; i < files.length; i++) {
     const file = files[i];
-
-    // Si c'est un examen :
-    if (file.endsWith(".gift")) {
-      const dataGIFT = fs.readFileSync(
-        `./res/examCreated/${file}.gift`,
-        "utf8"
-      );
-      // FAIRE AVEC LA FONCTION DE DAMARIS
-      
-    }
-
-    // Si c'est un profil déjà calculé :
     if (file.endsWith(".csv")) {
-      const dataCSV = fs.readFileSync(`./res/userExam/${file}.csv`, "utf8");
-      // On stocke les valeurs dans un dictionnaire :
-      const DataPerFile = {}; // stocke tous les types et les pourcentages associés pour le fichier lu
+      const dataCSV = fs.readFileSync(`./res/profiles/${file}`, "utf8");
 
       const lines = dataCSV.trim().split("\n");
 
@@ -289,19 +224,21 @@ export async function compareExam(files, logger) {
       for (let line of lines) {
         const [type, number] = line.split(",").map((s) => s.trim());
         const numberInt = parseInt(number, 10);
-        // Calcul des pourcentages pour chaque type :
-        const percentage = (numberInt / NumberOfQuestions) * 100;
-      }
+        // Calcul des pourcentages pour chaque type avec 1 chiffre après la virgule :
+        const percentage = ((numberInt / NumberOfQuestions) * 100).toFixed(1);
+        // On ajoute à la liste contenant les données sur tous les fichiers :
+        profilesVega.push({
+          fileName: file,
+          type,
+          percentage: parseFloat(percentage)
+        });
+      }  
     }
-    // On ajoute à la liste contenant les données sur tous les fichiers :
-    profilesVega.push({
-      fileName: file,
-      type,
-      percentage
-    });
+    else{
+      logger.error(`Le profil d'examen n'existe pas : ${file}`);
+    }   
   }
 
-  
   // specifications Vega-Lite
   const specVL = {
     $schema: "https://vega.github.io/schema/vega-lite/v5.json",
@@ -330,7 +267,7 @@ export async function compareExam(files, logger) {
         field: "type",
         type: "nominal",
         "scale": {
-        "domain": ["qcm", "vrai/faux", "ouverte"],
+        "domain": ["qcm", "vrai/faux", "ouverte"], // A MODIFIER 
         "range": ["#9467bd", "#b2e69eff", "#aec7e8"]
       },
         "title": "Types de questions"
@@ -354,23 +291,22 @@ export async function compareExam(files, logger) {
   await view.toCanvas();
 
   // Sauvegarder la spécification sans remplacer les éventuels comparaisons déjà existantes dans le répertoire :
-  const resDir = './res';
   let comparisonNumber = 1;
+  const existingFiles = fs.readdirSync('./res/stats');
 
-  // Trouver tous les fichiers comparison_X.json
-  const comparisonFiles = existingFiles.filter(f => f.match(/^comparison_\d+\.json$/));
+  // Trouver tous les fichiers comparison_X.png
+  const comparisonFiles = existingFiles.filter(f => f.match(/^comparison_\d+\.png$/));
     
   if (comparisonFiles.length > 0) {
     // Extraire les numéros et trouver le max
     const numbers = comparisonFiles.map(f => {
-      const match = f.match(/^comparison_(\d+)\.json$/);
+      const match = f.match(/^comparison_(\d+)\.png$/);
       return match ? parseInt(match[1], 10) : 0;
     });
     comparisonNumber = Math.max(...numbers) + 1;
   }
 
-  const outputPath = `./res/stats/comparison_${comparisonNumber}.jpg`;
+  const outputPath = `./res/stats/comparison_${comparisonNumber}.png`;
   fs.writeFileSync(outputPath, canvas.toBuffer("image/png"));
   console.log("Histogramme généré :", outputPath);
-
 }

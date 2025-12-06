@@ -104,15 +104,11 @@ cli
 
   .command(
     "compareExam",
-    "Comparer la répartition de types de questions entre au moins 2 examens"
+    "Comparer la répartition de types de questions dans un fichier ou entre plusieurs fichiers"
   )
   .argument("<Files>", "Liste des fichiers à comparer")
   .action(async({ args, logger }) => {
     const files = args.Files; // Stocker fichiers dans un tableau
-    if (files.length < 2) {
-      logger.warn("Vous devez indiquer au moins deux fichiers à comparer.");
-      return;
-    }
     await compareExam(files, logger);
   });
 
