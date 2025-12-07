@@ -1,5 +1,4 @@
 import fs from "fs";
-import readline from "readline";
 import { unique } from "vega-lite";
 
 /**
@@ -24,13 +23,15 @@ export async function searchQuestion(kw, id, type) {
   // Parcourt tous les fichiers dans le répertoire spécifié²
   for (const fileName of getAllFilesFromDir("./res/SujetB_data")) {
     let data;
-    try{
+    try {
       data = await fs.promises.readFile(
-      `./res/SujetB_data/${fileName}`,
-      "utf8"
+        `./res/SujetB_data/${fileName}`,
+        "utf8"
       );
-    } catch(err) {
-      console.error(`[ERREUR] Impossible d'accéder au fichier : ./res/SujetB_data/${fileName}`);
+    } catch (err) {
+      console.error(
+        `[ERREUR] Impossible d'accéder au fichier : ./res/SujetB_data/${fileName}`
+      );
     }
 
     // Divise le contenu du fichier en questions individuelles et soustrait le premier élément vide
@@ -51,8 +52,6 @@ export async function searchQuestion(kw, id, type) {
           }
         }
       }
-
-      // Check si l'ID de la question contient l'ID ou le type spécifié
       if (id || type) {
         if (id.length > 0) {
           for (let specificId of id) {
@@ -84,7 +83,8 @@ export async function searchQuestion(kw, id, type) {
  * @param {boolean} showAll Indicateur pour afficher tout le contenu de la question
  */
 export function displayQuestions(questionsArray, showAll) {
-  for (let question of questionsArray) {
+  const uniqueQuestions = unique(questionsArray, (d) => d.id);
+  for (let question of uniqueQuestions) {
     console.log("[ID] : \n" + question.id);
     if (showAll) {
       console.log("\n[content] :\n" + question.content);
@@ -101,9 +101,3 @@ export function displayQuestions(questionsArray, showAll) {
 export function getAllFilesFromDir(dirPath) {
   return fs.readdirSync(dirPath);
 }
-
-// testExam(
-//   "./res/SujetB_data/EM-U4-p32_33-Review.gift",
-//   "answer[EM-U4-p32_33-Review].txt",
-//   console
-// );

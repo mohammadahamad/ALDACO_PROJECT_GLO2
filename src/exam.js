@@ -195,13 +195,16 @@ function check(idsArray, newQuestion) {
 }
 
 /**
- * Fonction qui permet de simuler un examen en comparant les réponses de l'utilisateur avec les réponses correctes et en calculant une note. 
+ * Fonction qui permet de simuler un examen en comparant les réponses de l'utilisateur avec les réponses correctes et en calculant une note.
  * @param {string} examPath Chemin du fichier de l'examen
  * @param {string} UserAnswersFile Nom du fichier contenant les réponses de l'utilisateur
  * @param {*} logger Objet logger pour afficher les messages
  * @returns {Promise<void>}
  */
 export async function testExam(examPath, UserAnswersFile, logger) {
+  console.log(examPath);
+  console.log(UserAnswersFile);
+
   // Vérifier que les fichiers existent
   if (!fs.existsSync(examPath)) {
     logger.error(`Le fichier d'examen n'existe pas : ${examPath}`);
@@ -219,30 +222,36 @@ export async function testExam(examPath, UserAnswersFile, logger) {
     "utf8"
   );
 
-  // Diviser les questions et les réponses
-  const examDataSplited = examData.toLowerCase().split("::").slice(1);
+  // Diviser les questions et les réponses sans transformer le texte complet en minuscule
+  const examDataSplited = examData.split("::").slice(1);
   let questionFound = [];
   for (let i = 0; i < examDataSplited.length; i += 2) {
     questionFound.push({
-      id: examDataSplited[i],
+      id: examDataSplited[i].trim().toLowerCase(),
       content: examDataSplited[i + 1],
     });
   }
 
-  const userDataSplited = userData.toLowerCase().split("\n");
+  const userDataSplited = userData.split("\n");
   let userAnswers = [];
   for (let line of userDataSplited) {
+    if (!line.trim()) continue;
     let userAnswer = line.split("=");
+    const id = (userAnswer[0] || "").trim().toLowerCase();
+    const answerPart = userAnswer[1] || "";
     userAnswers.push({
-      id: userAnswer[0],
-      answer: [userAnswer[1].split("$")],
+      id,
+      answer: answerPart
+        .split("$")
+        .map((s) => s.trim())
+        .filter(Boolean),
     });
   }
 
   let examGoodAnswers = [];
   for (let question of questionFound) {
     examGoodAnswers.push({
-      id: question.id,
+      id: question.id.toLowerCase(),
       answer: extractGoodAnswer(question.content),
     });
   }
@@ -251,46 +260,86 @@ export async function testExam(examPath, UserAnswersFile, logger) {
   for (let ua of userAnswers) {
     for (let ega of examGoodAnswers) {
       if (ua.id === ega.id) {
+        console.log(`\n[INFO] Vérification de la question ID : ${ua.id}`);
+        console.log(`[INFO] Réponse de l'utilisateur : ${ua.answer}`);
+        console.log(`[INFO] Bonne(s) réponse(s) : ${ega.answer}`);
         score += checkGoodAnswer(ua.answer, ega.answer);
-        console.log("User answer: " + ua.answer);
-        console.log("Good answer: " + ega.answer);
       }
     }
   }
-  console.log(score);
+  console.log(
+    "[INFO] Le score attribué pour cet examen est de : " +
+      score +
+      " sur " +
+      userAnswers.length +
+      ".\n"
+  );
 }
 
 /**
- *  Extrait la ou les bonnes réponses du contenu de la question
- * @param {string} questionContent Contenu de la question
+ * Extrait la ou les bonnes réponses du contenu de la question (gestion multi-bloc, multi=, feedback #, retours-lignes)
+ * @param {string} questionContent Contenu de la question (exact tel quel)
  * @return {string[]} Tableau des bonnes réponses
  */
 function extractGoodAnswer(questionContent) {
-  const matches = [...questionContent.matchAll(/\{([^}]*)\}/g)];
-  const results = matches.map((m) => m[1]);
-  let finalResults = [];
-  for (let result of results) {
-    for (let simpleResult of result.split("~").slice(1)) {
-      if (simpleResult.startsWith("=")) {
-        finalResults.push(simpleResult.slice(1).trim());
+  const blocks = [...questionContent.matchAll(/\{([\s\S]*?)\}/g)].map(
+    (m) => m[1]
+  );
+
+  const goodAnswers = [];
+
+  for (let block of blocks) {
+    const normalizedBlock = block.replace(/\r\n/g, "\n").trim();
+
+    const blockWithoutFeedback = normalizedBlock
+      .replace(/#.*?(?=(=|~|$))/g, "")
+      .trim();
+
+    const partsByTilde = blockWithoutFeedback.split("~");
+
+    for (let part of partsByTilde) {
+      const eqSplit = part
+        .split("=")
+        .map((s) => s.trim())
+        .filter(Boolean);
+
+      for (let candidate of eqSplit) {
+        const cleaned = candidate.split("#")[0].trim();
+        if (cleaned.length > 0) {
+          goodAnswers.push(cleaned);
+        }
       }
     }
   }
-  return finalResults;
+
+  return goodAnswers;
 }
 
 /**
  * Vérifie si la réponse de l'utilisateur correspond aux bonnes réponses
  * @param {string} userAnswer Réponse de l'utilisateur
  * @param {string[]} goodAnswers Tableau des bonnes réponses
- * @return {number} 1 si la réponse est correcte, sinon 0 
+ * @return {number} 1 si la réponse est correcte, sinon 0
  */
-function checkGoodAnswer(userAnswer, goodAnswers) {
-  for (let i = 0; i < goodAnswers.length; i++) {
-    if (userAnswer[i] === goodAnswers[i]) {
-      return 1;
-    }
+function checkGoodAnswer(userAnswers, goodAnswers) {
+  if (!userAnswers || !goodAnswers || goodAnswers.length === 0) return 0;
+
+  const clean = (s) =>
+    String(s ?? "")
+      .toLowerCase()
+      .trim();
+
+  const cleanedUser = Array.isArray(userAnswers)
+    ? userAnswers.map(clean)
+    : [clean(userAnswers)];
+
+  const cleanedGood = goodAnswers.map(clean);
+
+  if (cleanedUser.some((u) => cleanedGood.includes(u))) {
+    console.log("[INFO] La réponse est correcte.\n");
+    return 1;
   }
+  console.log("[INFO] La réponse est incorrecte.\n");
   return 0;
 }
 
