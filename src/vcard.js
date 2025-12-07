@@ -3,26 +3,22 @@ import path from "path";
 
 /**
  * Fonction pour créer une vCard à partir des informations d'un utilisateur.
- *
  * @param {string} completeName Nom complet de l'utilisateur
  * @param {string} email Adresse e-mail de l'utilisateur
  * @param {string} school École de l'utilisateur
  * @param {string} phone Numéro de téléphone de l'utilisateur
  * @param {*} logger Objet logger pour afficher les messages
- * 
- * Verifie que les informations obligatoires sont fournies
- * Génère le contenu de la vCard au format VCARD 4.0
- * Enregistre la vCard dans le répertoire res/vcard avec un nom de fichier basé sur le nom complet
- * Affiche un message de succès ou d'erreur via le logger
- * 
+ * @returns {Promise<void>}
  */
 export async function createVcard(completeName, email, school, phone, logger) {
+  // Génération du contenu de la vCard
   try {
     if (!completeName || !email || !school) {
       logger.error("Erreur : nom complet, email et établissement sont obligatoires.");
       return;
     }
 
+    // Création du contenu de la vCard
     let vcfContent = 
 `BEGIN:VCARD
 VERSION:4.0
@@ -31,12 +27,14 @@ EMAIL:${email}
 ORG:${school}
 `;
 
+    // Ajout du numéro de téléphone si fourni
     if (phone) {
       vcfContent += `TEL:${phone}\n`;
     }
 
     vcfContent += `END:VCARD\n`;
 
+    // Définition du chemin du fichier vCard
     const vcardName = completeName.replace(/\\s+/g, "_");
     const filePath = path.join("res", "vcard", `${vcardName}.vcf`);
 
