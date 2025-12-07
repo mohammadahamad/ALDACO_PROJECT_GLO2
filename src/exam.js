@@ -194,38 +194,90 @@ function check(idsArray, newQuestion) {
 }
 
 // F7 : création de la commande testExam :
-export function testExam(examName, UserAnswersFile, logger) {
+export async function testExam(examPath, UserAnswersFile, logger) {
   // Vérifier que les fichiers existent
-  if (!fs.existsSync(examen)) {
-    logger.error(`Le fichier d'examen n'existe pas : ${examName}`);
+  if (!fs.existsSync(examPath)) {
+    logger.error(`Le fichier d'examen n'existe pas : ${examPath}`);
     return;
   }
-  if (!fs.existsSync(UserAnswersFile)) {
+  if (!fs.existsSync(`./res/userAnswer/${UserAnswersFile}`)) {
     logger.error(`Le fichier de réponses n'existe pas : ${UserAnswersFile}`);
     return;
   }
 
   // Lire les fichiers :
-  const examContent = fs.readFileSync(
-    "./res/examCreated/${examName}.gift",
-    "utf8"
-  );
-  const userAnswersContent = fs.readFileSync(
-    "./res/UsersAnswers/${UserAnswersFile}.gift",
+  const examData = await fs.promises.readFile(examPath, "utf8");
+  const userData = await fs.promises.readFile(
+    `./res/userAnswer/${UserAnswersFile}`,
     "utf8"
   );
 
-  // Divise le contenu en questions
-  // slice(1) pour retirer le premier élément vide avant le premier ::
-  const examQuestions = examContent.split("::").slice(1);
-  const userAnswers = userAnswersContent.split("::").slice(1);
+  // Diviser les questions et les réponses
+  const examDataSplited = examData.toLowerCase().split("::").slice(1);
+  let questionFound = [];
+  for (let i = 0; i < examDataSplited.length; i += 2) {
+    questionFound.push({
+      id: examDataSplited[i],
+      content: examDataSplited[i + 1],
+    });
+  }
 
-  let GoodAnswers = 0;
-  let BadAnswers = 0;
-  let TotalQuestions = 0;
-  // Note
-  // Liste bonnes réponses / mauvaises
-  // Liste réponses
+  const userDataSplited = userData.toLowerCase().split("\n");
+  let userAnswers = [];
+  for (let line of userDataSplited) {
+    let userAnswer = line.split("=");
+    userAnswers.push({
+      id: userAnswer[0],
+      answer: [userAnswer[1].split("$")],
+    });
+  }
+
+  let examGoodAnswers = [];
+  for (let question of questionFound) {
+    examGoodAnswers.push({
+      id: question.id,
+      answer: extractGoodAnswer(question.content),
+    });
+  }
+
+  let score = 0;
+  for (let ua of userAnswers) {
+    for (let ega of examGoodAnswers) {
+      if (ua.id === ega.id) {
+        score += checkGoodAnswer(ua.answer, ega.answer);
+        console.log("User answer: " + ua.answer);
+        console.log("Good answer: " + ega.answer);
+      }
+    }
+  }
+  console.log(score);
+}
+
+/**
+ *  Extrait la ou les bonnes réponses du contenu de la question
+ * @param {string} questionContent Contenu de la question
+ */
+function extractGoodAnswer(questionContent) {
+  const matches = [...questionContent.matchAll(/\{([^}]*)\}/g)];
+  const results = matches.map((m) => m[1]);
+  let finalResults = [];
+  for (let result of results) {
+    for (let simpleResult of result.split("~").slice(1)) {
+      if (simpleResult.startsWith("=")) {
+        finalResults.push(simpleResult.slice(1).trim());
+      }
+    }
+  }
+  return finalResults;
+}
+
+function checkGoodAnswer(userAnswer, goodAnswers) {
+  for (let i = 0; i < goodAnswers.length; i++) {
+    if (userAnswer[i] === goodAnswers[i]) {
+      return 1;
+    }
+  }
+  return 0;
 }
 
 // F9: création de la commande compareExam :

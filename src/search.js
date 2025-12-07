@@ -96,3 +96,9 @@ export function displayQuestions(questionsArray, showAll) {
 export function getAllFilesFromDir(dirPath) {
   return fs.readdirSync(dirPath);
 }
+
+// testExam(
+//   "./res/SujetB_data/EM-U4-p32_33-Review.gift",
+//   "answer[EM-U4-p32_33-Review].txt",
+//   console
+// );
