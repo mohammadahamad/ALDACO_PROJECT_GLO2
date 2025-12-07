@@ -9,6 +9,12 @@ import path from "path";
  * @param {string} school École de l'utilisateur
  * @param {string} phone Numéro de téléphone de l'utilisateur
  * @param {*} logger Objet logger pour afficher les messages
+ * 
+ * Verifie que les informations obligatoires sont fournies
+ * Génère le contenu de la vCard au format VCARD 4.0
+ * Enregistre la vCard dans le répertoire res/vcard avec un nom de fichier basé sur le nom complet
+ * Affiche un message de succès ou d'erreur via le logger
+ * 
  */
 export async function createVcard(completeName, email, school, phone, logger) {
   try {

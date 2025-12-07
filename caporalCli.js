@@ -17,7 +17,15 @@ program
     });
   })
 
-  // F1 : création de la commande searchQuestion :
+  /**
+ * Commande searchQuestion qui permet de chercher une question dans la banque de questions
+ * 
+ * @param {string} kw Mot-clé de recherche
+ * @param {string} id ID spécifique de la question
+ * @param {string} type Type spécifique de la question
+ * @param {boolean} showAll Indicateur pour afficher les détails de la question
+ * 
+ */
   .command(
     "searchQuestion",
     "Chercher une question dans la banque de questions"
@@ -32,7 +40,14 @@ program
     });
   })
 
-  // F3 : création de la commande createExam :
+/**
+ * Commande createExam qui permet de créer un examen à partir d'une liste d'IDs
+ * 
+ * @param {string} examName Nom de l'examen
+ * @param {string[]} ids Liste d'IDs pour l'examen
+ * @param {string} author Nom de l'auteur de l'examen
+ * 
+ */
   .command("createExam", "Créer un examen à partir d'IDs")
   .argument("<examName>", "Nom de l'examen")
   .argument("<ids>", "Liste d'IDs séparés par des virgules")
@@ -42,7 +57,12 @@ program
     await createExam(args.examName, idsArray, args.author);
   })
 
-  // F6 : création de la commande createVcard :
+ /**
+ * Commande createVcard qui permet de créer une vCard à partir des informations d'un utilisateur
+ * 
+ * 
+ * 
+ */
   .command("createVcard", "Créer une vCard à partir d'un utilisateur")
   .argument("<completeName>", "Nom complet de l'utilisateur")
   .argument("<email>", "Adresse e-mail de l'utilisateur")

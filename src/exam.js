@@ -11,13 +11,25 @@ import readline from "readline";
  * @param {string} examName Nom de l'examen
  * @param {string[]} idsArray Tableau des IDs des questions
  * @param {string} author Nom de l'auteur de l'examen
+ * 
+ * - Création du .gift 
+ * Vérification du nombre d'IDs uniques (entre 15 et 20)
+ * Confirmation des IDs
+ * Vérification que toutes les questions ont été confirmées sinon proposer un remplacement
+ * Recherche de la nouvelle question jusqu'à ce qu'une valide soit trouvée
+ * Vérification de la question et confirmation de son ajout
+ * Création et enregistrement de l'examen au format GIFT
+ * 
+ * - Création du .csv pour le profil de l'examen
+ * Détection du type de chaque question
+ * Comptage du nombre de questions par type
+ * Création et enregistrement du fichier CSV dans le répertoire csv
+ * 
  */
-// F3 : création de la commande createExam :
 export async function createExam(examName, idsArray, author) {
   for (let id of idsArray) {
     console.log(id);
   }
-  // Vérification du nombre d'IDs uniques (entre 15 et 20)
   if (!check(idsArray)) {
     console.log(
       "[ERREUR] Veuillez indiquer entre 15 et 20 identifiants de questions uniques."
@@ -25,7 +37,6 @@ export async function createExam(examName, idsArray, author) {
     return;
   }
 
-  // Confirmation des IDs
   const questionsConfirmed = [];
   const rl = readline.createInterface({
     input: process.stdin,
@@ -49,7 +60,6 @@ export async function createExam(examName, idsArray, author) {
     });
   }
 
-  // Vérification que toutes les questions ont été confirmées sinon proposer un remplacement
   while (questionsConfirmed.length < idsArray.length) {
     console.log(
       "[INFO] Nombre de questions confirmées : " + questionsConfirmed.length
@@ -61,7 +71,6 @@ export async function createExam(examName, idsArray, author) {
     let newId = await ask("Entrez l'ID de la question de remplacement :\n", rl);
     let question = null;
 
-    // Recherche de la nouvelle question jusqu'à ce qu'une valide soit trouvée
     while (!question) {
       await searchQuestion(null, [newId], null).then(async (results) => {
         if (results.length === 0) {
@@ -78,7 +87,6 @@ export async function createExam(examName, idsArray, author) {
       });
     }
 
-    //vérification de la question et confirmation de son ajout
     console.log("Question trouvée pour l'id " + newId + " :");
     console.log(question);
     const answer = await ask("Confirmer son ajout ? [O/N]\n", rl);
@@ -90,7 +98,6 @@ export async function createExam(examName, idsArray, author) {
 
   rl.close();
 
-  // Création et enregistrement de l'examen au format GIFT
   console.log("author:", author);
   let examContent = "" + author + "\n\n";
   questionsConfirmed.forEach((question) => {
@@ -107,7 +114,6 @@ export async function createExam(examName, idsArray, author) {
     }
   });
 
-  // Création du CSV pour le profil de l'examen
   function detectQuestionType(text) {
     text = text.toLowerCase();
 
@@ -161,6 +167,7 @@ export async function createExam(examName, idsArray, author) {
  * @param {*} question  La question à poser
  * @param {*} rl Interface readline pour l'entrée/sortie
  * @returns {Promise<string>} La réponse de l'utilisateur
+ * 
  */
 function ask(question, rl) {
   return new Promise((resolve) => {
@@ -176,6 +183,7 @@ function ask(question, rl) {
  * @param {*} idsArray Tableau des IDs
  * @param {*} newQuestion Nouvelle question à vérifier
  * @returns {boolean} Indique si les IDs sont valides
+ * 
  */
 function check(idsArray, newQuestion) {
   if (newQuestion) {
@@ -194,7 +202,21 @@ function check(idsArray, newQuestion) {
   );
 }
 
-// F7 : création de la commande testExam :
+/**
+ * Fonction qui permet de simuler un examen en comparant les réponses de l'utilisateur avec les réponses correctes et en calculant une note. 
+ *
+ * @param {string} examPath Chemin du fichier de l'examen
+ * @param {string} UserAnswersFile Nom du fichier contenant les réponses de l'utilisateur
+ * @param {*} logger Objet logger pour afficher les messages
+ * 
+ * Vérifier que les fichiers existent
+ * Lire les fichiers
+ * Diviser les questions et les réponses
+ * Extraire les bonnes réponses du contenu des questions
+ * Comparer les réponses de l'utilisateur avec les bonnes réponses et calculer le score
+ * A COMPLETER
+ * 
+ */
 export async function testExam(examPath, UserAnswersFile, logger) {
   // Vérifier que les fichiers existent
   if (!fs.existsSync(examPath)) {
@@ -256,7 +278,10 @@ export async function testExam(examPath, UserAnswersFile, logger) {
 
 /**
  *  Extrait la ou les bonnes réponses du contenu de la question
+ * 
  * @param {string} questionContent Contenu de la question
+ * @return {string[]} Tableau des bonnes réponses
+ * 
  */
 function extractGoodAnswer(questionContent) {
   const matches = [...questionContent.matchAll(/\{([^}]*)\}/g)];
@@ -272,6 +297,14 @@ function extractGoodAnswer(questionContent) {
   return finalResults;
 }
 
+/**
+ * Vérifie si la réponse de l'utilisateur correspond aux bonnes réponses
+ * 
+ * @param {string} userAnswer Réponse de l'utilisateur
+ * @param {string[]} goodAnswers Tableau des bonnes réponses
+ * @return {number} 1 si la réponse est correcte, sinon 0 
+ * 
+ */
 function checkGoodAnswer(userAnswer, goodAnswers) {
   for (let i = 0; i < goodAnswers.length; i++) {
     if (userAnswer[i] === goodAnswers[i]) {
@@ -281,7 +314,20 @@ function checkGoodAnswer(userAnswer, goodAnswers) {
   return 0;
 }
 
-// F9: création de la commande compareExam :
+/**
+ * Fonction qui renvoie un graphique comparant la répartition des types de questions entre plusieurs fichiers CSV de profils d'examen ou d'un seul examen.
+ * 
+ * @param {string[]} files Liste des fichiers CSV à comparer
+ * @param {*} logger Objet logger pour afficher les messages
+ * 
+ * Vérifier que les fichiers existent
+ * Lire les fichiers CSV
+ * Calculer le pourcentage de chaque type de question
+ * Générer un histogramme avec Vega-Lite
+ * Sauvegarder l'histogramme en PNG
+ * Proposer une comparaison relative entre deux fichiers pour un type de question
+ * 
+ */
 export async function compareExam(files, logger) {
   const profilesVega = []; // données exploitables pour Vega-Lite
 
