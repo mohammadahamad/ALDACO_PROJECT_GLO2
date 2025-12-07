@@ -35,12 +35,13 @@ program
 
   // F3 : création de la commande createExam :
   .command("createExam", "Créer un examen à partir d'IDs")
+  .description("usage : createExam <examName> <id1,id2,id3,...> <AuthorName>")
   .argument("<examName>", "Nom de l'examen")
   .argument("<ids>", "Liste d'IDs séparés par des virgules")
   .argument("<Author>", "Nom de l'auteur de l'examen")
-  .action(({ args, logger }) => {
+  .action(async ({ args, logger }) => {
     const idsArray = args.ids.split(",").map((x) => x.trim());
-    createExam(args.examName, idsArray, args.Author);
+    await createExam(args.examName, idsArray, args.Author);
   })
 
   // F6 : création de la commande createVcard :
@@ -83,7 +84,6 @@ program
     "Comparer la répartition de types de questions dans un fichier ou entre plusieurs fichiers"
   )
   .argument("<Files...>", "Liste des fichiers à comparer")
-
 
   .action(async ({ args, logger }) => {
     const files = args.files;

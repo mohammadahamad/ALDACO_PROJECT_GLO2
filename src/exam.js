@@ -14,6 +14,9 @@ import readline from "readline";
  */
 // F3 : création de la commande createExam :
 export async function createExam(examName, idsArray, author) {
+  for (let id of idsArray) {
+    console.log(id);
+  }
   // Vérification du nombre d'IDs uniques (entre 15 et 20)
   if (!check(idsArray)) {
     console.log(
@@ -103,52 +106,52 @@ export async function createExam(examName, idsArray, author) {
     }
   });
 
-// Création du CSV pour le profil de l'examen
-function detectQuestionType(text) {
-  text = text.toLowerCase();
+  // Création du CSV pour le profil de l'examen
+  function detectQuestionType(text) {
+    text = text.toLowerCase();
 
-  const hasEqual = text.includes("=");
-  const hasTilde = text.includes("~");
-  const hasArrow = text.includes("->");
-  const hasTrueFalse = /(t|f|true|false|TRUE|FALSE)/.test(text);
+    const hasEqual = text.includes("=");
+    const hasTilde = text.includes("~");
+    const hasArrow = text.includes("->");
+    const hasTrueFalse = /(t|f|true|false|TRUE|FALSE)/.test(text);
 
-  if (hasEqual && hasTilde) return "choix_multiples";
-  if (hasTrueFalse) return "vrai_faux";
-  if (hasArrow) return "correspondance";
-  if (hasEqual && !hasTilde && !hasArrow) return "mot_manquant";
-  if (text.includes("{#")) return "numerique";
-  if (!hasEqual && !hasTilde && !hasArrow) return "question_ouverte";
+    if (hasEqual && hasTilde) return "choix_multiples";
+    if (hasTrueFalse) return "vrai_faux";
+    if (hasArrow) return "correspondance";
+    if (hasEqual && !hasTilde && !hasArrow) return "mot_manquant";
+    if (text.includes("{#")) return "numerique";
+    if (!hasEqual && !hasTilde && !hasArrow) return "question_ouverte";
 
-  return "autre";
-}
+    return "autre";
+  }
 
-const counters = {
-  choix_multiples: 0,
-  vrai_faux: 0,
-  correspondance: 0,
-  mot_manquant: 0,
-  numerique: 0,
-  question_ouverte: 0,
-};
+  const counters = {
+    choix_multiples: 0,
+    vrai_faux: 0,
+    correspondance: 0,
+    mot_manquant: 0,
+    numerique: 0,
+    question_ouverte: 0,
+  };
 
-for (const question of questionsConfirmed) {
-  const type = detectQuestionType(question.content);
-  if (counters[type] !== undefined) counters[type]++;
-}
+  for (const question of questionsConfirmed) {
+    const type = detectQuestionType(question.content);
+    if (counters[type] !== undefined) counters[type]++;
+  }
 
-if (!fs.existsSync("./res/profiles")) {
-  fs.mkdirSync("./res/profiles", { recursive: true });
-}
+  if (!fs.existsSync("./res/profiles")) {
+    fs.mkdirSync("./res/profiles", { recursive: true });
+  }
 
-const csvContent =
-  `choix multiples,${counters.choix_multiples}\n` +
-  `vrai-faux,${counters.vrai_faux}\n` +
-  `correspondance,${counters.correspondance}\n` +
-  `mot manquant,${counters.mot_manquant}\n` +
-  `numérique,${counters.numerique}\n` +
-  `question ouverte,${counters.question_ouverte}\n`;
+  const csvContent =
+    `choix multiples,${counters.choix_multiples}\n` +
+    `vrai-faux,${counters.vrai_faux}\n` +
+    `correspondance,${counters.correspondance}\n` +
+    `mot manquant,${counters.mot_manquant}\n` +
+    `numérique,${counters.numerique}\n` +
+    `question ouverte,${counters.question_ouverte}\n`;
 
-fs.writeFileSync(`./res/profiles/${examName}.csv`, csvContent, "utf8");
+  fs.writeFileSync(`./res/profiles/${examName}.csv`, csvContent, "utf8");
 }
 
 /**
@@ -184,7 +187,7 @@ function check(idsArray, newQuestion) {
   }
   let uniqueIds = [...new Set(idsArray)];
   return (
-    uniqueIds.length !== idsArray.length &&
+    uniqueIds.length === idsArray.length &&
     idsArray.length >= 15 &&
     idsArray.length <= 20
   );
@@ -225,7 +228,6 @@ export function testExam(examName, UserAnswersFile, logger) {
   // Liste réponses
 }
 
-
 // F9: création de la commande compareExam :
 export async function compareExam(files, logger) {
   const profilesVega = []; // données exploitables pour Vega-Lite
@@ -264,7 +266,6 @@ export async function compareExam(files, logger) {
     }
   }
 
-
   // specifications Vega-Lite
   const specVL = {
     $schema: "https://vega.github.io/schema/vega-lite/v5.json",
@@ -293,8 +294,22 @@ export async function compareExam(files, logger) {
         field: "type",
         type: "nominal",
         scale: {
-          domain: ["choix multiples", "vrai-faux", "correspondance", "mot manquant", "numérique", "question ouverte"], 
-          range: ["#9467bd", "#b2e69eff", "#aec7e8", "#e8aeddff", "#f5d77dff", "#55e0d4ff"],
+          domain: [
+            "choix multiples",
+            "vrai-faux",
+            "correspondance",
+            "mot manquant",
+            "numérique",
+            "question ouverte",
+          ],
+          range: [
+            "#9467bd",
+            "#b2e69eff",
+            "#aec7e8",
+            "#e8aeddff",
+            "#f5d77dff",
+            "#55e0d4ff",
+          ],
         },
         title: "Types de questions",
       },
@@ -311,8 +326,8 @@ export async function compareExam(files, logger) {
     loader: vega.loader(),
   });
 
-  // Rendu PNG 
-  const canvas = await view.toCanvas(); 
+  // Rendu PNG
+  const canvas = await view.toCanvas();
 
   // Sauvegarder la spécification sans remplacer les éventuels comparaisons déjà existantes dans le répertoire :
   let comparisonNumber = 1;
@@ -336,18 +351,20 @@ export async function compareExam(files, logger) {
   fs.writeFileSync(outputPath, canvas.toBuffer("image/png"));
   console.log("Histogramme généré :", outputPath);
 
-
   // Rapport comparatif :
   const rl = readline.createInterface({
     input: process.stdin,
-    output: process.stdout
+    output: process.stdout,
   });
 
-  const question = (query) => new Promise((resolve) => rl.question(query, resolve));
+  const question = (query) =>
+    new Promise((resolve) => rl.question(query, resolve));
 
-  const response = await question("\nVoulez-vous une différence relative entre deux fichiers pour un type de question ? [O/N] : ");
+  const response = await question(
+    "\nVoulez-vous une différence relative entre deux fichiers pour un type de question ? [O/N] : "
+  );
 
-  if (response.toUpperCase() === 'O') {
+  if (response.toUpperCase() === "O") {
     // Afficher la liste des fichiers disponibles
     console.log("\nFichiers disponibles :");
     files.forEach((f) => console.log(`${f}`));
@@ -356,28 +373,34 @@ export async function compareExam(files, logger) {
     const file2 = await question("\nChoisissez le deuxième fichier : ");
 
     // Afficher les types disponibles
-    console.log("\nTypes de questions disponibles : choix multiples, vrai-faux, correspondance, mot manquant, numérique, question ouverte");
-    const selectedType = await question("\nChoisissez le type de question parmi la liste ci-dessus : ");
+    console.log(
+      "\nTypes de questions disponibles : choix multiples, vrai-faux, correspondance, mot manquant, numérique, question ouverte"
+    );
+    const selectedType = await question(
+      "\nChoisissez le type de question parmi la liste ci-dessus : "
+    );
 
     // Récupérer les pourcentages déjà calculés dans profilesVega
-    const percent1 = profilesVega.find(p => p.fileName === file1 && p.type === selectedType)?.percentage || 0;
-    const percent2 = profilesVega.find(p => p.fileName === file2 && p.type === selectedType)?.percentage || 0;
+    const percent1 =
+      profilesVega.find((p) => p.fileName === file1 && p.type === selectedType)
+        ?.percentage || 0;
+    const percent2 =
+      profilesVega.find((p) => p.fileName === file2 && p.type === selectedType)
+        ?.percentage || 0;
 
     // Calculer la différence relative
-    let difference ;
+    let difference;
     if (percent1 !== 0) {
-      difference = ((percent2 - percent1) / percent1)*100;
-    }
-    else{
+      difference = ((percent2 - percent1) / percent1) * 100;
+    } else {
       difference = percent2;
     }
     difference = parseFloat(difference.toFixed(1));
 
-  
     console.log(`Type de question : ${selectedType}`);
     console.log(`${file1} : ${percent1}%`);
     console.log(`${file2} : ${percent2}%`);
     console.log(`Différence relative : ${difference}%`);
   }
-rl.close();
+  rl.close();
 }
