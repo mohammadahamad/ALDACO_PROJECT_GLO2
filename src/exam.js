@@ -6,19 +6,17 @@ import { createCanvas } from "canvas";
 import readline from "readline";
 
 /**
- * Fonction pour récupérer les questions dans la banque de questions avec des critères de recherche.
+ * Fonction pour récupérer les questions dans la banque de questions pour creer un enouvel examen .gift et créer sa fiche profil .csv qui decrit le nombre de question par type de question.
  *
- * @param {string} kw Mot-clé pour la recherche
- * @param {string} id id de la question
- * @param {string} type type de la question
- * @param {boolean} showAll Indicateur pour afficher tout le contenu de la question
+ * @param {string} examName Nom de l'examen
+ * @param {string[]} idsArray Tableau des IDs des questions
+ * @param {string} author Nom de l'auteur de l'examen
  */
-
 // F3 : création de la commande createExam :
 export async function createExam(examName, idsArray, author) {
   // Vérification du nombre d'IDs uniques (entre 15 et 20)
   if (!check(idsArray)) {
-    console$.log(
+    console.log(
       "[ERREUR] Veuillez indiquer entre 15 et 20 identifiants de questions uniques."
     );
     return;
@@ -104,6 +102,54 @@ export async function createExam(examName, idsArray, author) {
       console.log("[INFO] Fichier d'examen créé avec succès !");
     }
   });
+
+// Création du CSV pour le profil de l'examen
+function detectQuestionType(text) {
+  text = text.toLowerCase();
+
+  const hasEqual = text.includes("=");
+  const hasTilde = text.includes("~");
+  const hasArrow = text.includes("->");
+  const hasTrueFalse = /(t|f|true|false|TRUE|FALSE)/.test(text);
+
+  if (hasEqual && hasTilde) return "choix_multiples";
+  if (hasTrueFalse) return "vrai_faux";
+  if (hasArrow) return "correspondance";
+  if (hasEqual && !hasTilde && !hasArrow) return "mot_manquant";
+  if (text.includes("{#")) return "numerique";
+  if (!hasEqual && !hasTilde && !hasArrow) return "question_ouverte";
+
+  return "autre";
+}
+
+const counters = {
+  choix_multiples: 0,
+  vrai_faux: 0,
+  correspondance: 0,
+  mot_manquant: 0,
+  numerique: 0,
+  question_ouverte: 0,
+};
+
+for (const question of questionsConfirmed) {
+  const type = detectQuestionType(question.content);
+  if (counters[type] !== undefined) counters[type]++;
+}
+
+if (!fs.existsSync("./res/csv")) {
+  fs.mkdirSync("./res/csv", { recursive: true });
+}
+
+const csvContent =
+  `choix multiples,${counters.choix_multiples}\n` +
+  `vrai-faux,${counters.vrai_faux}\n` +
+  `correspondance,${counters.correspondance}\n` +
+  `mot manquant,${counters.mot_manquant}\n` +
+  `numérique,${counters.numerique}\n` +
+  `question ouverte,${counters.question_ouverte}\n`;
+
+fs.writeFileSync(`./res/csv/${examName}.csv`, csvContent, "utf8");
+
 }
 
 /**
@@ -143,52 +189,6 @@ function check(idsArray, newQuestion) {
     idsArray.length >= 15 &&
     idsArray.length <= 20
   );
-
-// Création du CSV pour le profil de l'examen
-// fonction pour détecter le type de question
-function detectQuestionType(q) {
-  const text = q.toLowerCase();
-  const hasEqual = text.includes("=");
-  const hasTilde = text.includes("~");
-  const hasArrow = text.includes("->");
-  const hasTrueFalse = /(t|f|true|false)/.test(text);
-
-  if (hasEqual && hasTilde) return "choix_multiples";
-  if (hasTrueFalse) return "vrai_faux";
-  if (hasArrow) return "correspondance";
-  if (hasEqual && !hasTilde && !hasArrow) return "mot_manquant";
-  if (text.includes("{#")) return "numerique";
-  if (!hasEqual && !hasTilde && !hasArrow) return "question_ouverte";
-
-  return "autre";
-}
-
-const counters = {
-  choix_multiples: 0,
-  vrai_faux: 0,
-  correspondance: 0,
-  mot_manquant: 0,
-  numerique: 0,
-  question_ouverte: 0,
-};
-
-for (const question of questionsConfirmed) {
-  const type = detectQuestionType(question);
-  if (counters[type] !== undefined) {
-    counters[type]++;
-  }
-}
-
-const csvContent =
-  `choix multiples,${counters.choix_multiples}\n` +
-  `vrai-faux,${counters.vrai_faux}\n` +
-  `correspondance,${counters.correspondance}\n` +
-  `mot manquant,${counters.mot_manquant}\n` +
-  `numérique,${counters.numerique}\n` +
-  `question ouverte,${counters.question_ouverte}\n`;
-
-fs.writeFileSync(`"./res/csv"/${examName}.csv`, csvContent, "utf8");
-
 }
 
 // F7 : création de la commande testExam :
@@ -225,8 +225,6 @@ export function testExam(examName, UserAnswersFile, logger) {
   // Liste bonnes réponses / mauvaises
   // Liste réponses
 }
-
-
 
 // F9: création de la commande compareExam :
 export async function compareExam(files, logger) {

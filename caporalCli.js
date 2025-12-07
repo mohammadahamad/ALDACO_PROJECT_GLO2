@@ -18,7 +18,6 @@ program
   })
 
   // F1 : création de la commande searchinBank :
-
   .command(
     "searchQuestion",
     "Chercher une question dans la banque de questions"
@@ -34,26 +33,22 @@ program
   })
 
   // F3 : création de la commande createExam :
-
   .command("createExam", "Créer un examen à partir d'IDs")
   .argument("<examName>", "Nom de l'examen")
   .argument("<ids>", "Liste d'IDs séparés par des virgules")
   .argument("<Author>", "Nom de l'auteur de l'examen")
   .action(({ args, logger }) => {
-    // Appel de la fonction createExam qui se trouve dans exam.js
     const idsArray = args.ids.split(",").map((x) => x.trim());
     createExam(args.examName, idsArray, args.Author);
   })
 
   // F6 : création de la commande createVcard :
-
   .command("createVcard", "Créer une vCard à partir d'un utilisateur")
   .argument("<completeName>", "Nom complet de l'utilisateur")
   .argument("<email>", "Adresse e-mail de l'utilisateur")
   .argument("<school>", "École de l'utilisateur")
   .argument("[phone]", "Numéro de téléphone de l'utilisateur")
   .action(async ({ args, logger }) => {
-    // Appel de la fonction searchQuestion qui se trouve dans search.js
     await createVcard(
       args.completeName,
       args.email,
@@ -64,7 +59,6 @@ program
   })
 
   // F7 : création de la commande testExam :
-
   .command("testExam", "Simuler un examen et obtenir une note")
   .argument("<FileName>", "Nom du fichier de l'examen à tester")
   .argument(
@@ -72,28 +66,24 @@ program
     "Nom du fichier contenant les réponses de l'utilisateur"
   )
   .action(({ args, logger }) => {
-    // Appel de la fonction testExam qui se trouve dans exam.js
     testExam(args.FileName, args.FileUserAnswers, logger);
   })
 
   // F8 : création de la commande statExam :
-
   .command("statExam", "Générer des statistiques à partir d'un examen")
   .argument("<FileName>", "Nom du fichier de l'examen à analyser")
   .action(async ({ args, logger }) => {
-    // Appel de la fonction statExam qui se trouve dans exam.js
     await statExam(args.FileName, logger);
   })
 
   // F9 : création de la commande compareExam :
-
   .command(
     "compareExam",
     "Comparer la répartition de types de questions dans un fichier ou entre plusieurs fichiers"
   )
   .argument("<Files>", "Liste des fichiers à comparer")
   .action(async ({ args, logger }) => {
-    const files = args.Files; // Stocker fichiers dans un tableau
+    const files = args.Files;
     await compareExam(files, logger);
   })
   .command("saveRessourse", "Sauvegarde un fichier dans un répertoire donné")
@@ -109,5 +99,4 @@ program
     });
   });
 
-// Lancement du programme
 program.run(process.argv.slice(2));

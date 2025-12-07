@@ -1,19 +1,22 @@
-// F6
-
 import fs from "fs/promises";
 import path from "path";
 
-// Création de la fonction createVcard appelée dans caporalCli.js
-
+/**
+ * Fonction pour créer une vCard à partir des informations d'un utilisateur.
+ *
+ * @param {string} completeName Nom complet de l'utilisateur
+ * @param {string} email Adresse e-mail de l'utilisateur
+ * @param {string} school École de l'utilisateur
+ * @param {string} phone Numéro de téléphone de l'utilisateur
+ * @param {*} logger Objet logger pour afficher les messages
+ */
 export async function createVcard(completeName, email, school, phone, logger) {
   try {
-    //Vérification des données obligatoires
     if (!completeName || !email || !school) {
       logger.error("Erreur : nom complet, email et établissement sont obligatoires.");
       return;
     }
 
-    //Construction du contenu VCard
     let vcfContent = 
 `BEGIN:VCARD
 VERSION:4.0
@@ -28,11 +31,9 @@ ORG:${school}
 
     vcfContent += `END:VCARD\n`;
 
-    //Création du nom du fichier
     const vcardName = completeName.replace(/\\s+/g, "_");
     const filePath = path.join("res", "vcard", `${vcardName}.vcf`);
 
-    //Écriture du fichier
     await fs.writeFile(filePath, vcfContent, "utf-8");
 
     logger.info(`Fichier VCard créé avec succès : ${filePath}`);
