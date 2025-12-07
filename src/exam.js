@@ -136,8 +136,8 @@ for (const question of questionsConfirmed) {
   if (counters[type] !== undefined) counters[type]++;
 }
 
-if (!fs.existsSync("./res/csv")) {
-  fs.mkdirSync("./res/csv", { recursive: true });
+if (!fs.existsSync("./res/profiles")) {
+  fs.mkdirSync("./res/profiles", { recursive: true });
 }
 
 const csvContent =
@@ -148,8 +148,7 @@ const csvContent =
   `numérique,${counters.numerique}\n` +
   `question ouverte,${counters.question_ouverte}\n`;
 
-fs.writeFileSync(`./res/csv/${examName}.csv`, csvContent, "utf8");
-
+fs.writeFileSync(`./res/profiles/${examName}.csv`, csvContent, "utf8");
 }
 
 /**
@@ -226,6 +225,7 @@ export function testExam(examName, UserAnswersFile, logger) {
   // Liste réponses
 }
 
+
 // F9: création de la commande compareExam :
 export async function compareExam(files, logger) {
   const profilesVega = []; // données exploitables pour Vega-Lite
@@ -242,13 +242,13 @@ export async function compareExam(files, logger) {
 
       // Calcul nombre de questions totales pour pourcentages :
       for (let line of lines) {
-        const [type, number] = line.split(",").map((s) => s.trim());
+        const [type, number] = line.split(/[;,]/).map((s) => s.trim());
         const numberInt = parseInt(number, 10); // convertir le string en entier
         NumberOfQuestions += numberInt;
       }
 
       for (let line of lines) {
-        const [type, number] = line.split(",").map((s) => s.trim());
+        const [type, number] = line.split(/[;,]/).map((s) => s.trim());
         const numberInt = parseInt(number, 10);
         // Calcul des pourcentages pour chaque type avec 1 chiffre après la virgule :
         const percentage = ((numberInt / NumberOfQuestions) * 100).toFixed(1);
@@ -263,6 +263,7 @@ export async function compareExam(files, logger) {
       logger.error(`Le profil d'examen n'existe pas : ${file}`);
     }
   }
+
 
   // specifications Vega-Lite
   const specVL = {
@@ -292,8 +293,8 @@ export async function compareExam(files, logger) {
         field: "type",
         type: "nominal",
         scale: {
-          domain: ["qcm", "vrai/faux", "ouverte"], // A MODIFIER
-          range: ["#9467bd", "#b2e69eff", "#aec7e8"],
+          domain: ["choix multiples", "vrai-faux", "correspondance", "mot manquant", "numérique", "question ouverte"], 
+          range: ["#9467bd", "#b2e69eff", "#aec7e8", "#e8aeddff", "#f5d77dff", "#55e0d4ff"],
         },
         title: "Types de questions",
       },
@@ -310,10 +311,8 @@ export async function compareExam(files, logger) {
     loader: vega.loader(),
   });
 
-  // Rendu PNG
-  const canvas = createCanvas(500, 350);
-  view.initialize(canvas);
-  await view.toCanvas();
+  // Rendu PNG 
+  const canvas = await view.toCanvas(); 
 
   // Sauvegarder la spécification sans remplacer les éventuels comparaisons déjà existantes dans le répertoire :
   let comparisonNumber = 1;
@@ -336,4 +335,49 @@ export async function compareExam(files, logger) {
   const outputPath = `./res/stats/comparison_${comparisonNumber}.png`;
   fs.writeFileSync(outputPath, canvas.toBuffer("image/png"));
   console.log("Histogramme généré :", outputPath);
+
+
+  // Rapport comparatif :
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout
+  });
+
+  const question = (query) => new Promise((resolve) => rl.question(query, resolve));
+
+  const response = await question("\nVoulez-vous une différence relative entre deux fichiers pour un type de question ? [O/N] : ");
+
+  if (response.toUpperCase() === 'O') {
+    // Afficher la liste des fichiers disponibles
+    console.log("\nFichiers disponibles :");
+    files.forEach((f) => console.log(`${f}`));
+
+    const file1 = await question("\nChoisissez le premier fichier : ");
+    const file2 = await question("\nChoisissez le deuxième fichier : ");
+
+    // Afficher les types disponibles
+    console.log("\nTypes de questions disponibles : choix multiples, vrai-faux, correspondance, mot manquant, numérique, question ouverte");
+    const selectedType = await question("\nChoisissez le type de question parmi la liste ci-dessus : ");
+
+    // Récupérer les pourcentages déjà calculés dans profilesVega
+    const percent1 = profilesVega.find(p => p.fileName === file1 && p.type === selectedType)?.percentage || 0;
+    const percent2 = profilesVega.find(p => p.fileName === file2 && p.type === selectedType)?.percentage || 0;
+
+    // Calculer la différence relative
+    let difference ;
+    if (percent1 !== 0) {
+      difference = ((percent2 - percent1) / percent1)*100;
+    }
+    else{
+      difference = percent2;
+    }
+    difference = parseFloat(difference.toFixed(1));
+
+  
+    console.log(`Type de question : ${selectedType}`);
+    console.log(`${file1} : ${percent1}%`);
+    console.log(`${file2} : ${percent2}%`);
+    console.log(`Différence relative : ${difference}%`);
+  }
+rl.close();
 }

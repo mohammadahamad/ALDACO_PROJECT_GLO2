@@ -1,6 +1,7 @@
 import { createExam, testExam } from "./src/exam.js";
 import { searchInBank, displayQuestions } from "./src/search.js";
 import { createVcard } from "./src/vcard.js";
+import { compareExam } from "./src/exam.js";
 import fs from "fs";
 import caporal from "@caporal/core";
 const { program } = caporal;
@@ -81,22 +82,12 @@ program
     "compareExam",
     "Comparer la répartition de types de questions dans un fichier ou entre plusieurs fichiers"
   )
-  .argument("<Files>", "Liste des fichiers à comparer")
+  .argument("<Files...>", "Liste des fichiers à comparer")
+
+
   .action(async ({ args, logger }) => {
-    const files = args.Files;
+    const files = args.files;
     await compareExam(files, logger);
-  })
-  .command("saveRessourse", "Sauvegarde un fichier dans un répertoire donné")
-  .argument("<pathDist>", "Chemin du répertoire de destination")
-  .argument("<pathSource>", "Chemin du fichier source")
-  .action(({ args, logger }) => {
-    fs.copyFile(args.pathSource, args.pathDist, (err) => {
-      if (err) {
-        console.error("[ERREUR] Erreur lors de la copie du fichier :", err);
-      } else {
-        console.log("[INFO] Fichier copié avec succès !");
-      }
-    });
   });
 
 program.run(process.argv.slice(2));

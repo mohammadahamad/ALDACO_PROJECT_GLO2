@@ -11,19 +11,14 @@ searchInBank : Rechercher une question dans la banque de questions à partir d'u
 
 createExam : Composer un examen à partir d'une liste d'ID représentant l'identifiant des questions souhaitées (F3)
 Cette fonction répond également à des spécifications sous-jacentes : F2 (affichage détaillée d'une question), F4 (génération d'un fichier examen .gift), F5 (vérification des contraintes d'unicité et de taille) et sauvegarde du fichier (F10). 
-Puisque cela sera nécessaire pour la fonction compareExam, une sous-fonction permet, à la création d'un examen, de générer son profil au format CSV.
+Puisque cela sera nécessaire pour la fonction compareExam, une sous-fonction (detectQuestionType) permet, à la création d'un examen, de générer son profil au format CSV.
 
 createVcard : Créer un fichier Vcard .vcf à partir de données utilisateurs : nom, adresse mail, école, et optionnellement son numéro de téléphone (F6, F10).
 
 testExam : Simuler un examen qui permet de comparer un fichier regroupant les réponses d'un étudiant aux réponses de l'examen et d'obtenir une note ainsi que la liste des bonnes ou mauvaises réponses de l'utilisateur (F7).
 
-///// A ENLEVER UNE FOIS QU'ON AURA FAIT LES MODIFS statExam : Obtenir des statistiques sur un examen (F8) via l'affichage d'un histogramme présentant le nombre de type de questions.
-
-compareExam : Cette fonction répond à 2 fonctionnalités : le cahier des charges demande d'obtenir des statistiques (selon les types de question) sur un seul fichier (F8) et de comparer deux fichiers ou plus selon les types de questions également (F9). Nous avons regroupé ces deux spécifications dans cette fonction qui prend en paramètre d'entrée un fichier (donc affiche seulement des statistiques) ou plusieurs fichiers (donc compare les statistiques entre fichiers). Ces fichiers correspondent aux profils d'examen en CSV.
-
-///// A CREER : diffExam : prend en entrée deux fichiers et le type de questions sur lequel on veut des informations. La fonction renvoie la différence relative entre ces deux fichiers concernant ce type. (F9)
-
-
+compareExam : Cette fonction répond à 2 fonctionnalités : le cahier des charges demande d'obtenir des statistiques (selon les types de question) sur un seul fichier (F8) et de comparer deux fichiers ou plus selon les types de questions également (F9). Nous avons regroupé ces deux spécifications dans cette fonction qui prend en paramètre d'entrée un fichier (donc affiche seulement des statistiques) ou plusieurs fichiers (donc compare les statistiques entre fichiers). Ces fichiers correspondent aux profils d'examen en CSV. Cette fonction permet donc d'afficher un histogramme de statistiques de la répartition de types de questions dans un ou plusieurs fichiers. 
+Une fois l'histogramme créé, l'utilisateur peut demander une différence relative entre 2 fichiers (parmi la liste fournie en paramètre d'entrée) pour un type de questions en particulier (F9). Cette différence correspond à ((percent2 - percentage1)/percent1)*100.
 
 
 ## Format de données
@@ -57,7 +52,7 @@ npm install vega vega-lite canvas
 
 ## Utilisation 
 
-à développer
+A DEVELOPPER
 
 
 ## Versions
@@ -79,6 +74,12 @@ Implémentation visualisation avec Vega-Lite.
 
 Version 1.5 :
 Création commande compareExam et implémentation.
+
+Version 1.6 :
+Unification de statExam et compareExam dans statExam et création et implémentation de detectQuestionType pour la création de profils CSV lors de la création d'un examen dans createExam.
+
+Version 1.7 :
+Ajout du rapport comparatif dans compareExam.
 
 
 ## Liste des contributeurs 
