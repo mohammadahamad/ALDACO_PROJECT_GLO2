@@ -1,5 +1,5 @@
 import fs from "fs";
-import { searchInBank } from "./search.js";
+import { searchQuestion } from "./search.js";
 import * as vega from "vega";
 import * as vegaLite from "vega-lite";
 import { createCanvas } from "canvas";
@@ -33,7 +33,7 @@ export async function createExam(examName, idsArray, author) {
   });
 
   for (const id of idsArray) {
-    await searchInBank(null, [id], null).then(async (results) => {
+    await searchQuestion(null, [id], null).then(async (results) => {
       if (results.length === 0) {
         console.log(
           `[ERREUR] La question avec l'ID ${id} n'a pas été trouvée dans la banque de questions.`
@@ -42,8 +42,8 @@ export async function createExam(examName, idsArray, author) {
       }
       console.log("Question trouvée pour l'id " + id + " :");
       console.log(results);
-      const answer = await ask("Confirmer son ajout ? [y/n]\n", rl);
-      if (answer.toLowerCase() === "y") {
+      const answer = await ask("Confirmer son ajout ? [O/N]\n", rl);
+      if (answer.toUpperCase() === "O") {
         questionsConfirmed.push(...results);
       }
     });
@@ -63,7 +63,7 @@ export async function createExam(examName, idsArray, author) {
 
     // Recherche de la nouvelle question jusqu'à ce qu'une valide soit trouvée
     while (!question) {
-      await searchInBank(null, [newId], null).then(async (results) => {
+      await searchQuestion(null, [newId], null).then(async (results) => {
         if (results.length === 0) {
           console.log(
             `[ERREUR] La question avec l'ID ${newId} n'a pas été trouvée dans la banque de questions. Veuillez en fournir un autre.`
@@ -81,9 +81,9 @@ export async function createExam(examName, idsArray, author) {
     //vérification de la question et confirmation de son ajout
     console.log("Question trouvée pour l'id " + newId + " :");
     console.log(question);
-    const answer = await ask("Confirmer son ajout ? [y/n]\n", rl);
+    const answer = await ask("Confirmer son ajout ? [O/N]\n", rl);
 
-    if (answer.toLowerCase() === "y" && check(questionsConfirmed, question)) {
+    if (answer.toUpperCase() === "O" && check(questionsConfirmed, question)) {
       questionsConfirmed.push(question);
     }
   }
@@ -91,6 +91,7 @@ export async function createExam(examName, idsArray, author) {
   rl.close();
 
   // Création et enregistrement de l'examen au format GIFT
+  console.log("author:", author);
   let examContent = "" + author + "\n\n";
   questionsConfirmed.forEach((question) => {
     examContent += "::" + question.id + ":: " + question.content + "\n";

@@ -10,7 +10,7 @@ import { unique } from "vega-lite";
  * @param {string} type type de la question
  * @param {boolean} showAll Indicateur pour afficher tout le contenu de la question
  */
-export async function searchInBank(kw, id, type) {
+export async function searchQuestion(kw, id, type) {
   // Vérification qu'au moins un critère de recherche est fourni
   if (!kw && id.length === 0 && !type) {
     logger.error(
@@ -23,10 +23,15 @@ export async function searchInBank(kw, id, type) {
 
   // Parcourt tous les fichiers dans le répertoire spécifié²
   for (const fileName of getAllFilesFromDir("./res/SujetB_data")) {
-    const data = await fs.promises.readFile(
+    let data;
+    try{
+      data = await fs.promises.readFile(
       `./res/SujetB_data/${fileName}`,
       "utf8"
-    );
+      );
+    } catch(err) {
+      console.error(`[ERREUR] Impossible d'accéder au fichier : ./res/SujetB_data/${fileName}`);
+    }
 
     // Divise le contenu du fichier en questions individuelles et soustrait le premier élément vide
     const questions = data.toLowerCase().split("::").slice(1);

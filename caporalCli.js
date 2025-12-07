@@ -1,7 +1,6 @@
-import { createExam, testExam } from "./src/exam.js";
-import { searchInBank, displayQuestions } from "./src/search.js";
+import { searchQuestion, displayQuestions } from "./src/search.js";
+import { createExam, testExam, compareExam} from "./src/exam.js";
 import { createVcard } from "./src/vcard.js";
-import { compareExam } from "./src/exam.js";
 import fs from "fs";
 import caporal from "@caporal/core";
 const { program } = caporal;
@@ -18,7 +17,7 @@ program
     });
   })
 
-  // F1 : création de la commande searchinBank :
+  // F1 : création de la commande searchQuestion :
   .command(
     "searchQuestion",
     "Chercher une question dans la banque de questions"
@@ -28,20 +27,19 @@ program
   .argument("[type]", "Type spécifique de la question")
   .option("--all", "Afficher les détails de la question")
   .action(({ args, options }) => {
-    searchInBank(args.kw, [args.id], args.type).then((results) => {
+    searchQuestion(args.kw, [args.id], args.type).then((results) => {
       displayQuestions(results, options.all);
     });
   })
 
   // F3 : création de la commande createExam :
   .command("createExam", "Créer un examen à partir d'IDs")
-  .description("usage : createExam <examName> <id1,id2,id3,...> <AuthorName>")
   .argument("<examName>", "Nom de l'examen")
   .argument("<ids>", "Liste d'IDs séparés par des virgules")
-  .argument("<Author>", "Nom de l'auteur de l'examen")
+  .argument("<author>", "Nom de l'auteur de l'examen")
   .action(async ({ args, logger }) => {
     const idsArray = args.ids.split(",").map((x) => x.trim());
-    await createExam(args.examName, idsArray, args.Author);
+    await createExam(args.examName, idsArray, args.author);
   })
 
   // F6 : création de la commande createVcard :
@@ -69,13 +67,6 @@ program
   )
   .action(({ args, logger }) => {
     testExam(args.FileName, args.FileUserAnswers, logger);
-  })
-
-  // F8 : création de la commande statExam :
-  .command("statExam", "Générer des statistiques à partir d'un examen")
-  .argument("<FileName>", "Nom du fichier de l'examen à analyser")
-  .action(async ({ args, logger }) => {
-    await statExam(args.FileName, logger);
   })
 
   // F9 : création de la commande compareExam :
