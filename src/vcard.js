@@ -14,13 +14,14 @@ export async function createVcard(completeName, email, school, phone, logger) {
   // Génération du contenu de la vCard
   try {
     if (!completeName || !email || !school) {
-      logger.error("Erreur : nom complet, email et établissement sont obligatoires.");
+      logger.error(
+        "Erreur : nom complet, email et établissement sont obligatoires."
+      );
       return;
     }
 
     // Création du contenu de la vCard
-    let vcfContent = 
-`BEGIN:VCARD
+    let vcfContent = `BEGIN:VCARD
 VERSION:4.0
 FN:${completeName}
 EMAIL:${email}
@@ -41,7 +42,6 @@ ORG:${school}
     await fs.writeFile(filePath, vcfContent, "utf-8");
 
     logger.info(`Fichier VCard créé avec succès : ${filePath}`);
-
   } catch (err) {
     logger.error("Erreur lors de la génération de la VCard : " + err.message);
   }

@@ -5,13 +5,12 @@ import { unique } from "vega-lite";
  * Fonction pour récupérer les questions dans la banque de questions avec des critères de recherche.
  *
  * @param {string} kw Mot-clé pour la recherche
- * @param {string[]} id id de la question
+ * @param {string || string[]} id id de la question
  * @param {string} type type de la question
- * @param {boolean} showAll Indicateur pour afficher tout le contenu de la question
  */
 export async function searchQuestion(kw, id, type) {
   // Vérification qu'au moins un critère de recherche est fourni
-  if (!kw && id.length === 0 && !type) {
+  if (!kw && !id && !type) {
     logger.error(
       "Veuillez fournir au moins un critère de recherche (mot-clé, ID, type de question)."
     );
@@ -20,7 +19,7 @@ export async function searchQuestion(kw, id, type) {
 
   let questionsFound = [];
 
-  // Parcourt tous les fichiers dans le répertoire spécifié²
+  // Parcourt tous les fichiers dans le répertoire spécifié
   for (const fileName of getAllFilesFromDir("./res/SujetB_data")) {
     let data;
     try {
@@ -52,8 +51,9 @@ export async function searchQuestion(kw, id, type) {
           }
         }
       }
-      if (id || type) {
-        if (id.length > 0) {
+
+      if (id) {
+        if (Array.isArray(id)) {
           for (let specificId of id) {
             if (questions[i].includes(specificId.toLowerCase())) {
               questionsFound.push({
@@ -62,7 +62,18 @@ export async function searchQuestion(kw, id, type) {
               });
             }
           }
-        } else if (questions[i].includes(type)) {
+        } else {
+          if (questions[i].includes(id.toLowerCase())) {
+            questionsFound.push({
+              id: questions[i],
+              content: questions[i + 1],
+            });
+          }
+        }
+      }
+
+      if (type) {
+        if (questions[i].includes(type.toLowerCase())) {
           questionsFound.push({
             id: questions[i],
             content: questions[i + 1],
