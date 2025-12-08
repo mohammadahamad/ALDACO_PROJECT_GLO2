@@ -13,10 +13,6 @@ import readline from "readline";
  * @returns {Promise<void>}
  */
 export async function createExam(examName, idsArray, author) {
-  for (let id of idsArray) {
-    console.log(id);
-  }
-
   // Vérification du nombre d'IDs uniques (entre 15 et 20)
   if (!check(idsArray)) {
     console.log(
@@ -199,7 +195,7 @@ function check(idsArray, newQuestion) {
  * @param {string} examPath Chemin du fichier de l'examen
  * @param {string} UserAnswersFile Nom du fichier contenant les réponses de l'utilisateur
  * @param {*} logger Objet logger pour afficher les messages
- * @returns {Promise<void>}
+ * @returns {Promise<void> | number} Note obtenue à l'examen
  */
 export async function testExam(examPath, UserAnswersFile, logger) {
   console.log(examPath);
@@ -274,6 +270,7 @@ export async function testExam(examPath, UserAnswersFile, logger) {
       userAnswers.length +
       ".\n"
   );
+  return score;
 }
 
 /**
