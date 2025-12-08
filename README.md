@@ -77,6 +77,10 @@ node caporalCli.js createExam ["Nom examen"] ["Liste des IDs séparés par une v
 exemple :
 node caporalCli.js createExam "TestExam" "EM U5 p34 Gra1.1,EM U5 p34 Gra1.2,EM U5 p34 Gra1.3,EM U5 p34 Gra1.4,EM U5 p34 Gra1.5,EM U5 p34 Gra1.6,EM U5 p34 Gra1.7,EM U5 p34 Gra1.8,EM U5 p34 Gra2.1,EM U5 p34 Gra2.2,EM U5 p34 Gra2.3,EM U5 p34 Gra2.4,EM U5 p34 Gra2.5,EM U5 p34 Gra2.6,EM U5 p34 Gra2.7" "TestAuteur"
 
+Info test unitaire :
+
+Le test est irréalisable card
+
 ### Simuler un examen :
 
 node CaporalCli.js testExam ["examPath"] ["fileUserAnswers"]
