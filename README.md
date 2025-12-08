@@ -50,7 +50,7 @@ type, nombre (CSV simplifié)
 - F1 : les entrées demandées étaient mot-clé, type, identifiant ou texte partiel. Nous avons réuni mot-clé et texte partiel en laissant la possibilité d'indiquer un ou plusieurs mots-clés.
 - F3 : la fonction permettant la constitution d'un ensemble de questions pour un examen ne prend pas que les identifiants sélectionnés en paramètres, mais également le nom de l'examen et l'auteur.
 - F8 et F9 invitaient à créer deux fonctions séparées, mais F8 n'étant qu'un cas particulier de F9 avec un nombre de fichier en entrée égal à un, nous avons répondu à ces deux exigences en une seule fonction compareExam afin d'optimiser la lisiblité et cohérence du code. L'entrée souhaitée (fichier GIFT) correspond à celle lors de la création d'examen où l'on transforme les données en CSV dans la fonction pour afficher l'histogramme plus lisiblement.
-- La différence relative demandée (F9) a été traitée de façon à comparer deux fichiers pour un type à la fois dans compareExam et non pas pour tous les types de chaque fichier ce qui aurait demandé une grande capacité de calcul et une latence de réponse.
+- La différence relative demandée (F9) a été traitée de manière plus lisible de façon à comparer deux fichiers pour un type à la fois dans compareExam et non pas pour tous les types de chaque fichier ce qui aurait généré une suite de données affichées immense.
 
 ## Installation
 
@@ -59,9 +59,13 @@ npm install
 Pour installer Vega, Vega-Lite et Canvas :
 npm install vega vega-lite canvas
 
+Pour les tests :
+npm test
+
 ## Utilisation
 
 Se placer dans le dossier ALDACO_PROJECT_GLO2 pour exécuter les commandes suivantes.
+Les fonctions sont déclarées dans caporalCli.js et implémentées dans exam.js, search.js et vcard.js. Les tests unitaires associés ont été rédigés dans le dossier spec.
 
 ### Chercher une question dans la banque de données :
 
@@ -78,8 +82,7 @@ exemple :
 node caporalCli.js createExam "TestExam" "EM U5 p34 Gra1.1,EM U5 p34 Gra1.2,EM U5 p34 Gra1.3,EM U5 p34 Gra1.4,EM U5 p34 Gra1.5,EM U5 p34 Gra1.6,EM U5 p34 Gra1.7,EM U5 p34 Gra1.8,EM U5 p34 Gra2.1,EM U5 p34 Gra2.2,EM U5 p34 Gra2.3,EM U5 p34 Gra2.4,EM U5 p34 Gra2.5,EM U5 p34 Gra2.6,EM U5 p34 Gra2.7" "TestAuteur"
 
 Info test unitaire :
-
-Le test de cette commande est irréalisable en test unitaire car la commande génère une succession d'interactions avec l'utilisateur dans le terminal, bloquant le terminal. Par conséquent, le test sera forcément résulté d'un échec car le test a mis trop de temps à se terminer.
+Le test de cette commande est irréalisable en test unitaire car la commande génère une succession d'interactions avec l'utilisateur dans le terminal, bloquant le terminal. Par conséquent, le test serait forcément résulté d'un échec car le test a mis trop de temps à se terminer.
 
 ### Simuler un examen :
 
@@ -98,6 +101,9 @@ node caporalCli.js createVcard "Aldaco Co" "aldaco.co@example.com" "UTT" "061234
 node caporalCli.js compareExam [noms des fichiers à la suite séparés par un espace]
 exemple :
 node caporalCli.js compareExam test1.csv test2.csv
+
+Info test unitaire :
+Le test de cette commande est irréalisable en test unitaire car la commande génère une interaction (pour la différence relative) avec l'utilisateur dans le terminal, bloquant le terminal. Par conséquent, le test serait forcément résulté d'un échec car le test a mis trop de temps à se terminer.
 
 ## Versions
 
@@ -127,6 +133,9 @@ Ajout du rapport comparatif dans compareExam.
 
 Version 1.8 :
 Implémentation de testExam.
+
+Version 1.9 :
+Création d'un dossier spec pour réaliser les tests unitaires.
 
 ## Liste des contributeurs
 
