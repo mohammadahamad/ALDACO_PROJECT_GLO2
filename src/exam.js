@@ -198,9 +198,6 @@ function check(idsArray, newQuestion) {
  * @returns {Promise<void> | number} Note obtenue à l'examen
  */
 export async function testExam(examPath, UserAnswersFile, logger) {
-  console.log(examPath);
-  console.log(UserAnswersFile);
-
   // Vérifier que les fichiers existent
   if (!fs.existsSync(examPath)) {
     logger.error(`Le fichier d'examen n'existe pas : ${examPath}`);
