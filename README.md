@@ -79,7 +79,7 @@ node caporalCli.js createExam "TestExam" "EM U5 p34 Gra1.1,EM U5 p34 Gra1.2,EM U
 
 Info test unitaire :
 
-Le test est irréalisable card
+Le test de cette commande est irréalisable en test unitaire car la commande génère une succession d'interactions avec l'utilisateur dans le terminal, bloquant le terminal. Par conséquent, le test sera forcément résulté d'un échec car le test a mis trop de temps à se terminer.
 
 ### Simuler un examen :
 
