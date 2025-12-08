@@ -36,10 +36,10 @@ ORG:${school}
     vcfContent += `END:VCARD\n`;
 
     // Définition du chemin du fichier vCard
-    const vcardName = completeName.replace(/\\s+/g, "_");
-    const filePath = path.join("res", "vcard", `${vcardName}.vcf`);
+    const vcardName = completeName.split(" ").join("_");
+    const filePath = path.join("./res/vcard", `${vcardName}.vcf`);
 
-    await fs.writeFile(filePath, vcfContent, "utf-8");
+    await fs.writeFile( filePath, vcfContent, "utf-8");
 
     logger.info(`Fichier VCard créé avec succès : ${filePath}`);
   } catch (err) {
