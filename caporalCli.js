@@ -47,21 +47,45 @@ program
    * @param {boolean} showAll Indicateur pour afficher les détails de la question
    */
   .command(
-    "searchQuestion",
-    "Chercher une question dans la banque de questions"
-  )
-  .argument("[kw]", "Mot-clé de recherche")
-  .argument("[id]", "ID spécifique de la question")
-  .argument("[type]", "Type spécifique de la question")
-  .option("--all", "Afficher les détails de la question")
-  .action(async ({ args, options }) => {
-    const keywords = args.kw ? args.kw : null;
-    const id = args.id ? args.id : null;
-    const type = args.type ? args.type : null;
-    await searchQuestion(keywords, id, type).then((results) => {
-      displayQuestions(results, options.all);
-    });
-  })
+  "searchQuestion",
+  "Chercher une question dans la banque de questions (mode interactif)"
+)
+.option("--all", "Afficher les détails de la question")
+.action(async ({ options }) => {
+  console.log("=== Recherche de questions ===");
+
+  const kw = await askQuestion(
+    "Mot-clé (laisser vide si aucun) : "
+  );
+
+  const id = await askQuestion(
+    "ID de la question (laisser vide si aucun) : "
+  );
+
+  const type = await askQuestion(
+    "Type de question (laisser vide si aucun) : "
+  );
+
+  // Normalisation
+  const keyword = kw.trim() || null;
+  const questionId = id.trim() || null;
+  const questionType = type.trim() || null;
+
+  if (!keyword && !questionId && !questionType) {
+    console.log(
+      "[ERREUR] Veuillez fournir au moins un critère de recherche."
+    );
+    return;
+  }
+
+  const results = await searchQuestion(
+    keyword,
+    questionId,
+    questionType
+  );
+
+  displayQuestions(results, options.all);
+})
 
   /**
    * Commande createExam (refactorée en mode interactif)
