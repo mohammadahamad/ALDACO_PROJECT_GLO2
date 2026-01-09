@@ -89,18 +89,53 @@ export async function searchQuestion(kw, id, type) {
 }
 
 /**
- * Affiche un tableau de questions dans la console.
+ * Affiche un tableau de questions dans la console avec détails formatés.
  * @param {{id: string, content: string}[]} questionsArray Tableau des questions
  * @param {boolean} showAll Indicateur pour afficher tout le contenu de la question
  */
 export function displayQuestions(questionsArray, showAll) {
-  const uniqueQuestions = unique(questionsArray, (d) => d.id);
-  for (let question of uniqueQuestions) {
-    console.log("[ID] : \n" + question.id);
-    if (showAll) {
-      console.log("\n[content] :\n" + question.content);
-    }
+  if (!questionsArray || questionsArray.length === 0) {
+    console.log("Aucune question à afficher");
+    return;
   }
+
+  const uniqueQuestions = unique(questionsArray, (d) => d.id);
+  console.log(
+    `\n╔════════════════════════════════════════════════════════════╗`
+  );
+  console.log(
+    `║             ${uniqueQuestions.length} QUESTION(S) TROUVÉE(S)             ║`
+  );
+  console.log(
+    `╚════════════════════════════════════════════════════════════╝\n`
+  );
+
+  for (let i = 0; i < uniqueQuestions.length; i++) {
+    const question = uniqueQuestions[i];
+    console.log(`\n Question ${i + 1}/${uniqueQuestions.length}`);
+    console.log(`─────────────────────────────────────`);
+    console.log(` ID : ${question.id.trim()}`);
+
+    if (showAll) {
+      console.log(`\n Contenu :`);
+      console.log(`${question.content}`);
+    } else {
+      // Afficher un aperçu du contenu
+      const preview = question.content.trim().substring(0, 150);
+      console.log(`\n Aperçu : ${preview}${preview.length < question.content.length ? "..." : ""}`);
+      console.log(`   (Utilisez l'option --all pour afficher le contenu complet)`);
+    }
+    console.log(`─────────────────────────────────────`);
+  }
+  console.log(
+    `\n╔════════════════════════════════════════════════════════════╗`
+  );
+  console.log(
+    `║                 FIN DE LA RECHERCHE                        ║`
+  );
+  console.log(
+    `╚════════════════════════════════════════════════════════════╝\n`
+  );
 }
 
 /**
