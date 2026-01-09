@@ -1,5 +1,5 @@
 import { searchQuestion, displayQuestions } from "./src/search.js";
-import { createExam, testExam, compareExam } from "./src/exam.js";
+import { createExam, testExam, compareExam, deleteQuestion } from "./src/exam.js";
 import { createVcard } from "./src/vcard.js";
 import fs from "fs";
 import caporal from "@caporal/core";
@@ -85,13 +85,13 @@ program
     // Fin de saisie
     if (!trimmedId) break;
 
-    // 🔴 Détection doublon immédiate
+    // Détection doublon immédiate
     if (ids.includes(trimmedId)) {
       logger.error(`[ERREUR] L'ID "${trimmedId}" a déjà été saisi.`);
       continue;
     }
 
-    // 🔴 Vérification existence immédiate
+    // Vérification existence immédiate
     const results = await searchQuestion(null, [trimmedId], null);
     if (!results || results.length === 0) {
       logger.error(
@@ -100,13 +100,13 @@ program
       continue;
     }
 
-    // ✅ ID valide
+    // ID valide
     ids.push(trimmedId);
     logger.info(`→ ${ids.length} question(s) validée(s)`);
     count++;
   }
 
-  // 🔴 Validation du nombre de questions AVANT createExam
+  // Validation du nombre de questions AVANT createExam
   if (ids.length < 15 || ids.length > 20) {
     logger.error(
       "Veuillez sélectionner entre 15 et 20 questions uniques et valides."
@@ -158,6 +158,21 @@ program
     const userFile = args.fileUserAnswers;
     await testExam(examPath, userFile, logger);
   })
+
+  /**
+ * Commande deleteQuestion qui permet de supprimer une question d'un examen
+ * @param {string} examPath Chemin du fichier de l'examen
+ * @param {string} questionId ID de la question à supprimer
+ * @param {*} logger Objet logger pour afficher les messages
+ */
+.command("deleteQuestion", "Supprimer une question d'un examen")
+.argument("<examPath>", "Chemin du fichier de l'examen")
+.argument("<questionId>", "ID de la question à supprimer")
+.action(async ({ args, logger }) => {
+  const examPath = args.examPath;
+  const questionId = args.questionId;
+  await deleteQuestion(examPath, questionId, logger);
+})
 
   /**
    * Commande compareExam qui permet de comparer la répartition de types de questions dans un fichier ou entre plusieurs fichiers

@@ -154,6 +154,123 @@ export async function createExam(examName, idsArray, author) {
 }
 
 /**
+ * Fonction pour supprimer une question d'un examen
+ * @param {string} examPath Chemin du fichier d'examen (.gift)
+ * @param {string} questionId ID de la question à supprimer
+ * @param {*} logger Objet logger pour afficher les messages
+ * @returns {Promise<void>}
+ */
+export async function deleteQuestion(examPath, questionId, logger) {
+  // Vérifier que le fichier existe
+  if (!fs.existsSync(examPath)) {
+    logger.error(`Le fichier d'examen n'existe pas : ${examPath}`);
+    return;
+  }
+
+  // Lire le fichier d'examen
+  const examData = fs.readFileSync(examPath, "utf8");
+  const lines = examData.split("\n");
+
+  // Récupérer l'auteur (première ligne)
+  const author = lines[0];
+
+  // Parser les questions
+  const examDataSplited = examData.split("::").slice(1);
+  const questionsArray = [];
+  
+  for (let i = 0; i < examDataSplited.length; i += 2) {
+    questionsArray.push({
+      id: examDataSplited[i].trim(),
+      content: examDataSplited[i + 1],
+    });
+  }
+
+  // Trouver et supprimer la question
+  const questionIndexToDelete = questionsArray.findIndex(
+    (q) => q.id.toLowerCase() === questionId.toLowerCase()
+  );
+
+  if (questionIndexToDelete === -1) {
+    logger.error(`[ERREUR] La question avec l'ID ${questionId} n'a pas été trouvée dans cet examen.`);
+    return;
+  }
+
+  // Empêcher la suppression si l'examen contient déjà 15 questions
+  if (questionsArray.length <= 15) {
+    logger.error(
+      `[ERREUR] L'examen contient ${questionsArray.length} questions. Impossible de supprimer une question (minimum 15 questions requis).`
+    );
+    return;
+  }
+
+  const deletedQuestion = questionsArray[questionIndexToDelete];
+  questionsArray.splice(questionIndexToDelete, 1);
+
+  // Réécrire le fichier d'examen
+  let newExamContent = author + "\n\n";
+  questionsArray.forEach((question) => {
+    newExamContent += "::" + question.id + ":: " + question.content + "\n";
+  });
+
+  fs.writeFileSync(examPath, newExamContent, "utf8");
+  logger.info(`[INFO] Question avec l'ID ${questionId} supprimée avec succès.`);
+
+  // Mettre à jour le fichier CSV de profil correspondant
+  const examName = examPath.split("/").pop().replace(".gift", "");
+  const csvPath = `./res/profiles/${examName}.csv`;
+
+  if (fs.existsSync(csvPath)) {
+    // Fonction pour détecter le type de question (même que dans createExam)
+    function detectQuestionType(text) {
+      text = text.toLowerCase();
+
+      const hasEqual = text.includes("=");
+      const hasTilde = text.includes("~");
+      const hasArrow = text.includes("->");
+      const hasTrueFalse = /(t|f|true|false|TRUE|FALSE)/.test(text);
+
+      if (hasEqual && hasTilde) return "choix_multiples";
+      if (hasTrueFalse) return "vrai_faux";
+      if (hasArrow) return "correspondance";
+      if (hasEqual && !hasTilde && !hasArrow) return "mot_manquant";
+      if (text.includes("{#")) return "numerique";
+      if (!hasEqual && !hasTilde && !hasArrow) return "question_ouverte";
+
+      return "autre";
+    }
+
+    const deletedQuestionType = detectQuestionType(deletedQuestion.content);
+
+    const counters = {
+      choix_multiples: 0,
+      vrai_faux: 0,
+      correspondance: 0,
+      mot_manquant: 0,
+      numerique: 0,
+      question_ouverte: 0,
+    };
+
+    // Comptage du nombre de questions par type restantes
+    for (const question of questionsArray) {
+      const type = detectQuestionType(question.content);
+      if (counters[type] !== undefined) counters[type]++;
+    }
+
+    // Réécrire le fichier CSV
+    const newCsvContent =
+      `choix multiples,${counters.choix_multiples}\n` +
+      `vrai-faux,${counters.vrai_faux}\n` +
+      `correspondance,${counters.correspondance}\n` +
+      `mot manquant,${counters.mot_manquant}\n` +
+      `numérique,${counters.numerique}\n` +
+      `question ouverte,${counters.question_ouverte}\n`;
+
+    fs.writeFileSync(csvPath, newCsvContent, "utf8");
+    logger.info(`[INFO] Fichier de profil ${examName}.csv mis à jour.`);
+  }
+}
+
+/**
  * Fonction pour poser une question à l'utilisateur dans le terminal et récupérer sa réponse.
  * @param {*} question  La question à poser
  * @param {*} rl Interface readline pour l'entrée/sortie
