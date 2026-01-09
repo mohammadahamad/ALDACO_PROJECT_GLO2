@@ -13,13 +13,59 @@ import readline from "readline";
  * @returns {Promise<void>}
  */
 export async function createExam(examName, idsArray, author) {
-  // Vérification du nombre d'IDs uniques (entre 15 et 20)
-  if (!check(idsArray)) {
+  const cleanedIds = Array.isArray(idsArray)
+    ? idsArray.map((id) => String(id ?? "").trim())
+    : [];
+
+  if (!examName || !String(examName).trim()) {
     console.log(
-      "[ERREUR] Veuillez indiquer entre 15 et 20 identifiants de questions uniques."
+      "[ERREUR] Argument manquant : nom de l'examen. Exemple : createExam \"NomExam\" \"ID1,ID2,...\" \"Auteur\"."
     );
     return;
   }
+
+  if (!author || !String(author).trim()) {
+    console.log(
+      "[ERREUR] Argument manquant : nom de l'enseignant/auteur. Exemple : createExam \"NomExam\" \"ID1,ID2,...\" \"Auteur\"."
+    );
+    return;
+  }
+
+  if (cleanedIds.length === 0) {
+    console.log(
+      "[ERREUR] Argument manquant : liste d'IDs. Fournissez entre 15 et 20 identifiants separes par des virgules."
+    );
+    return;
+  }
+
+  const emptyIds = cleanedIds.filter((id) => !id);
+  if (emptyIds.length > 0) {
+    console.log(
+      `[ERREUR] ${emptyIds.length} identifiant(s) vide(s) dans la liste. Verifiez la syntaxe (IDs separes par des virgules).`
+    );
+    return;
+  }
+
+  const uniqueIds = [...new Set(cleanedIds)];
+  if (uniqueIds.length !== cleanedIds.length) {
+    const duplicates = cleanedIds.filter(
+      (id, index) => cleanedIds.indexOf(id) !== index
+    );
+    const duplicateList = [...new Set(duplicates)].join(", ");
+    console.log(
+      `[ERREUR] IDs dupliques detectes : ${duplicateList}. Merci de fournir des IDs uniques.`
+    );
+    return;
+  }
+
+  if (cleanedIds.length < 15 || cleanedIds.length > 20) {
+    console.log(
+      `[ERREUR] Nombre de questions incorrect : ${cleanedIds.length} fourni(es), attendu entre 15 et 20.`
+    );
+    return;
+  }
+
+  idsArray = cleanedIds;
 
   // Confirmation des IDs
   const questionsConfirmed = [];
@@ -461,91 +507,174 @@ function checkGoodAnswer(userAnswers, goodAnswers) {
  * @returns {Promise<void>}
  */
 export async function compareExam(files, logger) {
-  const profilesVega = []; // données exploitables pour Vega-Lite
+  if (!files || files.length === 0) {
+    logger.error("Aucun fichier fourni pour compareExam.");
+    return;
+  }
+
+  const profilesVega = []; // donnees exploitables pour Vega-Lite
+  const perFileStats = new Map();
 
   // Ouvrir les fichiers en argument :
   for (let i = 0; i < files.length; i++) {
     const file = files[i];
-    if (file.endsWith(".csv")) {
-      const dataCSV = fs.readFileSync(`./res/profiles/${file}`, "utf8");
+    if (!file.endsWith(".csv")) {
+      logger.error(`Le profil d'examen n'existe pas : ${file}`);
+      continue;
+    }
+    const filePath = `./res/profiles/${file}`;
+    if (!fs.existsSync(filePath)) {
+      logger.error(`Le profil d'examen n'existe pas : ${file}`);
+      continue;
+    }
 
-      const lines = dataCSV.trim().split("\n");
+    const dataCSV = fs.readFileSync(filePath, "utf8");
+    const lines = dataCSV
+      .trim()
+      .split("\n")
+      .map((line) => line.trim())
+      .filter(Boolean);
 
-      let NumberOfQuestions = 0;
+    let NumberOfQuestions = 0;
+    const rows = [];
 
-      // Calcul nombre de questions totales pour pourcentages :
-      for (let line of lines) {
-        const [type, number] = line.split(/[;,]/).map((s) => s.trim());
-        const numberInt = parseInt(number, 10); // convertir le string en entier
+    // Calcul nombre de questions totales pour pourcentages :
+    for (let line of lines) {
+      const [type, number] = line.split(/[;,]/).map((s) => s.trim());
+      const numberInt = parseInt(number, 10);
+      if (!Number.isNaN(numberInt)) {
         NumberOfQuestions += numberInt;
       }
-
-      for (let line of lines) {
-        const [type, number] = line.split(/[;,]/).map((s) => s.trim());
-        const numberInt = parseInt(number, 10);
-        // Calcul des pourcentages pour chaque type avec 1 chiffre après la virgule :
-        const percentage = ((numberInt / NumberOfQuestions) * 100).toFixed(1);
-        // On ajoute à la liste contenant les données sur tous les fichiers :
-        profilesVega.push({
-          fileName: file,
-          type,
-          percentage: parseFloat(percentage),
-        });
-      }
-    } else {
-      logger.error(`Le profil d'examen n'existe pas : ${file}`);
+      rows.push({ type, numberInt });
     }
+
+    const stats = [];
+    for (let row of rows) {
+      const numberInt = Number.isNaN(row.numberInt) ? 0 : row.numberInt;
+      const percentage =
+        NumberOfQuestions > 0
+          ? ((numberInt / NumberOfQuestions) * 100).toFixed(1)
+          : "0.0";
+      const percentageFloat = parseFloat(percentage);
+      stats.push({
+        type: row.type,
+        count: numberInt,
+        percentage: percentageFloat,
+      });
+      profilesVega.push({
+        fileName: file,
+        type: row.type,
+        percentage: percentageFloat,
+      });
+    }
+
+    perFileStats.set(file, stats);
+  }
+
+  if (profilesVega.length === 0) {
+    logger.error("Aucune statistique n'a pu etre calculee.");
+    return;
   }
 
   // specifications Vega-Lite
-  const specVL = {
-    $schema: "https://vega.github.io/schema/vega-lite/v5.json",
-    description: "Histogramme des types de questions selon les examens",
-    width: 500,
-    height: 350,
-    data: {
-      values: profilesVega,
-    },
-    mark: "bar",
-    encoding: {
-      x: {
-        field: "fileName",
-        type: "nominal",
-        title: "Fichiers",
-      },
-      y: {
-        field: "percentage",
-        type: "quantitative",
-        title: "Pourcentage (%)",
-        scale: {
-          domain: [0, 100],
+  const isSingleExam = files.length === 1;
+  const specVL = isSingleExam
+    ? {
+        $schema: "https://vega.github.io/schema/vega-lite/v5.json",
+        description: "Histogramme des types de questions (1 examen)",
+        width: 500,
+        height: 350,
+        data: {
+          values: profilesVega,
         },
-      },
-      color: {
-        field: "type",
-        type: "nominal",
-        scale: {
-          domain: [
-            "choix multiples",
-            "vrai-faux",
-            "correspondance",
-            "mot manquant",
-            "numérique",
-            "question ouverte",
-          ],
-          range: [
-            "#9467bd",
-            "#b2e69eff",
-            "#aec7e8",
-            "#e8aeddff",
-            "#f5d77dff",
-            "#55e0d4ff",
-          ],
+        mark: "bar",
+        encoding: {
+          x: {
+            field: "type",
+            type: "nominal",
+            title: "Types de questions",
+          },
+          y: {
+            field: "percentage",
+            type: "quantitative",
+            title: "Pourcentage (%)",
+            scale: {
+              domain: [0, 100],
+            },
+          },
+          color: {
+            field: "type",
+            type: "nominal",
+            scale: {
+              domain: [
+                "choix multiples",
+                "vrai-faux",
+                "correspondance",
+                "mot manquant",
+                "num?rique",
+                "question ouverte",
+              ],
+              range: [
+                "#9467bd",
+                "#b2e69eff",
+                "#aec7e8",
+                "#e8aeddff",
+                "#f5d77dff",
+                "#55e0d4ff",
+              ],
+            },
+            title: "Types de questions",
+          },
         },
-        title: "Types de questions",
-      },
-    },
-  };
+      }
+    : {
+        $schema: "https://vega.github.io/schema/vega-lite/v5.json",
+        description: "Histogramme des types de questions selon les examens",
+        width: 500,
+        height: 350,
+        data: {
+          values: profilesVega,
+        },
+        mark: "bar",
+        encoding: {
+          x: {
+            field: "fileName",
+            type: "nominal",
+            title: "Fichiers",
+          },
+          y: {
+            field: "percentage",
+            type: "quantitative",
+            title: "Pourcentage (%)",
+            scale: {
+              domain: [0, 100],
+            },
+          },
+          color: {
+            field: "type",
+            type: "nominal",
+            scale: {
+              domain: [
+                "choix multiples",
+                "vrai-faux",
+                "correspondance",
+                "mot manquant",
+                "num?rique",
+                "question ouverte",
+              ],
+              range: [
+                "#9467bd",
+                "#b2e69eff",
+                "#aec7e8",
+                "#e8aeddff",
+                "#f5d77dff",
+                "#55e0d4ff",
+              ],
+            },
+            title: "Types de questions",
+          },
+        },
+      };
 
   // Compilation Vega-Lite en Vega
   const vegaSpec = vegaLite.compile(specVL).spec;
@@ -560,27 +689,41 @@ export async function compareExam(files, logger) {
   // Rendu PNG
   const canvas = await view.toCanvas();
 
-  // Sauvegarder la spécification sans remplacer les éventuels comparaisons déjà existantes dans le répertoire :
-  let comparisonNumber = 1;
-  const existingFiles = fs.readdirSync("./res/stats");
-
-  // Trouver tous les fichiers comparison_X.png
-  const comparisonFiles = existingFiles.filter((f) =>
-    f.match(/^comparison_\d+\.png$/)
-  );
-
-  if (comparisonFiles.length > 0) {
-    // Extraire les numéros et trouver le max
-    const numbers = comparisonFiles.map((f) => {
-      const match = f.match(/^comparison_(\d+)\.png$/);
-      return match ? parseInt(match[1], 10) : 0;
-    });
-    comparisonNumber = Math.max(...numbers) + 1;
+  if (!fs.existsSync("./res/stats")) {
+    fs.mkdirSync("./res/stats", { recursive: true });
   }
 
-  const outputPath = `./res/stats/comparison_${comparisonNumber}.png`;
+  // Sauvegarder la specification sans remplacer les fichiers existants :
+  const filePrefix = isSingleExam ? "stat" : "comparison";
+  let outputNumber = 1;
+  const existingFiles = fs.readdirSync("./res/stats");
+  const matchingFiles = existingFiles.filter((f) =>
+    f.match(new RegExp(`^${filePrefix}_\\d+\\.png$`))
+  );
+
+  if (matchingFiles.length > 0) {
+    const numbers = matchingFiles.map((f) => {
+      const match = f.match(new RegExp(`^${filePrefix}_(\\d+)\\.png$`));
+      return match ? parseInt(match[1], 10) : 0;
+    });
+    outputNumber = Math.max(...numbers) + 1;
+  }
+
+  const outputPath = `./res/stats/${filePrefix}_${outputNumber}.png`;
   fs.writeFileSync(outputPath, canvas.toBuffer("image/png"));
-  console.log("Histogramme généré :", outputPath);
+  if (isSingleExam) {
+    console.log("[INFO] Mode statistiques (1 examen) : " + files[0]);
+    const stats = perFileStats.get(files[0]) || [];
+    console.log("[INFO] Repartition des types de questions :");
+    stats.forEach((stat) => {
+      console.log(`- ${stat.type} : ${stat.count} (${stat.percentage}%)`);
+    });
+  }
+  console.log("Histogramme genere :", outputPath);
+
+  if (isSingleExam) {
+    return;
+  }
 
   // Rapport comparatif :
   const rl = readline.createInterface({
@@ -592,7 +735,7 @@ export async function compareExam(files, logger) {
     new Promise((resolve) => rl.question(query, resolve));
 
   const response = await question(
-    "\nVoulez-vous une différence relative entre deux fichiers pour un type de question ? [O/N] : "
+    "\nVoulez-vous une difference relative entre deux fichiers pour un type de question ? [O/N] : "
   );
 
   if (response.toUpperCase() === "O") {
@@ -601,17 +744,17 @@ export async function compareExam(files, logger) {
     files.forEach((f) => console.log(`${f}`));
 
     const file1 = await question("\nChoisissez le premier fichier : ");
-    const file2 = await question("\nChoisissez le deuxième fichier : ");
+    const file2 = await question("\nChoisissez le deuxieme fichier : ");
 
     // Afficher les types disponibles
     console.log(
-      "\nTypes de questions disponibles : choix multiples, vrai-faux, correspondance, mot manquant, numérique, question ouverte"
+      "\nTypes de questions disponibles : choix multiples, vrai-faux, correspondance, mot manquant, num?rique, question ouverte"
     );
     const selectedType = await question(
       "\nChoisissez le type de question parmi la liste ci-dessus : "
     );
 
-    // Récupérer les pourcentages déjà calculés dans profilesVega
+    // Recuperer les pourcentages deja calcules dans profilesVega
     const percent1 =
       profilesVega.find((p) => p.fileName === file1 && p.type === selectedType)
         ?.percentage || 0;
@@ -619,7 +762,7 @@ export async function compareExam(files, logger) {
       profilesVega.find((p) => p.fileName === file2 && p.type === selectedType)
         ?.percentage || 0;
 
-    // Calculer la différence relative
+    // Calculer la difference relative
     let difference;
     if (percent1 !== 0) {
       difference = ((percent2 - percent1) / percent1) * 100;
@@ -631,7 +774,7 @@ export async function compareExam(files, logger) {
     console.log(`Type de question : ${selectedType}`);
     console.log(`${file1} : ${percent1}%`);
     console.log(`${file2} : ${percent2}%`);
-    console.log(`Différence relative : ${difference}%`);
+    console.log(`Difference relative : ${difference}%`);
   }
   rl.close();
 }

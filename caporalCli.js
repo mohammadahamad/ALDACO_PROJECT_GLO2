@@ -181,7 +181,7 @@ program
    */
   .command(
     "compareExam",
-    "Comparer la répartition de types de questions dans un fichier ou entre plusieurs fichiers"
+    "Comparer la repartition des types de questions pour 1 fichier ou plusieurs fichiers"
   )
   .argument("<Files...>", "Liste des fichiers à comparer")
 
