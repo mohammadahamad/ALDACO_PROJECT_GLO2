@@ -139,5 +139,5 @@ Création d'un dossier spec pour réaliser les tests unitaires.
 
 ## Liste des contributeurs
 
-Equipe pour le cahier des charges : JS_Force
+Equipe pour le cahier des charges et maintenance & évolutio : JS_Force (Ahamad MOHAMMAD, Théo DELOINCE, Wail BOSEALI)
 Equipe de développement : ALDACO (Damaris Barbot, Marco Orfao, Albane Verschelde)
